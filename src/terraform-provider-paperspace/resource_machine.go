@@ -48,7 +48,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 		region = r.(string)
 	}
   if region == "" {
-    return fmt.Errorf("Error: missing paperspace region")
+    return fmt.Errorf("Error creating paperspace machine: missing region")
   }
 
   body := make(MapIf)
