@@ -15,6 +15,10 @@ func (m *MapIf) Append(d *schema.ResourceData, k string) {
   (*m)[k] = v
 }
 
+func (m *MapIf) AppendV(d *schema.ResourceData, k,v string) {
+  (*m)[k] = v
+}
+
 func (m *MapIf) AppendIfSet(d *schema.ResourceData, k string) {
   v := d.Get(k)
   if reflect.ValueOf(v).Interface() != reflect.Zero(reflect.TypeOf(v)).Interface() {
@@ -39,8 +43,16 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 
   log.Printf("[INFO] paperspace resourceMachineCreate Client ready")
 
+  region := m.(PaperspaceClient).Region
+	if r, ok := d.GetOk("region"); ok {
+		region = r.(string)
+	}
+  if region == "" {
+    return fmt.Errorf("Error: missing paperspace region")
+  }
+
   body := make(MapIf)
-  body.Append(d, "region")
+  body.AppendV(d, "region", region)
   body.Append(d, "machineType")
   body.Append(d, "size")
   body.Append(d, "billingType")
@@ -246,7 +258,7 @@ func resourceMachine() *schema.Resource {
     Schema: map[string]*schema.Schema{
       "region": &schema.Schema{
           Type:     schema.TypeString,
-          Required: true,
+          Optional: true,
       },
       "machineType": &schema.Schema{
           Type:     schema.TypeString,

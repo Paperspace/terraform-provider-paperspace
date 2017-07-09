@@ -4,7 +4,7 @@ provider "paperspace" {
 }
 
 resource "paperspace_machine" "my-machine-1" {
-  region = "East Coast (NY2)" // or "${var.paperspace_region}"
+  region = "East Coast (NY2)" // defaults to provider region if not specified
   machineType = "C1"
   size = 50
   billingType = "hourly"
