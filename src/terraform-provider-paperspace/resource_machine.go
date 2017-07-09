@@ -54,6 +54,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
   body.AppendIfSet(d, "firstName")
   body.AppendIfSet(d, "lastName")
   body.AppendIfSet(d, "notificationEmail")
+  body.AppendIfSet(d, "scriptId")
 
   data, _ := json.MarshalIndent(body, "", "  ")
   log.Println(string(data))
@@ -121,6 +122,8 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
   SetResData(d, mp, "region") //overlays with null initially
   SetResData(d, mp, "userId")
   SetResData(d, mp, "teamId")
+  SetResData(d, mp, "scriptId")
+  SetResData(d, mp, "dtLastRun")
 
   d.SetId(id);
 
@@ -128,14 +131,108 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
+  client := m.(PaperspaceClient).RestyClient
+
+  log.Printf("[INFO] paperspace resourceMachineRead Client ready")
+
+  resp, err := client.R().
+  Get("/machines/getMachinePublic?machineId=" + d.Id())
+
+  if err != nil {
+    return fmt.Errorf("Error reading paperspace machine: %s", err)
+  }
+
+  statusCode := resp.StatusCode()
+  log.Printf("[INFO] paperspace resourceMachineRead StatusCode: %v", statusCode)
+  LogResponse("paperspace resourceMachineCreate", resp, err)
+  if statusCode == 404 {
+    log.Printf("[INFO] paperspace resourceMachineRead machineId not found; removing resource %s", d.Id())
+    d.SetId("")
+    return nil
+  }
+  if statusCode != 200 {
+    return fmt.Errorf("Error reading paperspace machine: Response: %s", resp.Body())
+  }
+
+  var f interface{}
+  err = json.Unmarshal(resp.Body(), &f)
+
+  if err != nil {
+    return fmt.Errorf("Error unmarshalling paperspace machine read response: %s", err)
+  }
+
+  mp := f.(map[string]interface{})
+  id, _ := mp["id"].(string)
+
+  if id == "" {
+    log.Printf("[WARNING] paperspace resourceMachineRead machine id not found; removing resource %s", d.Id())
+    d.SetId("")
+    return nil
+  }
+
+  log.Printf("[INFO] paperspace resourceMachineRead returned id: %v", id)
+
+  SetResDataFrom(d, mp, "machineName", "name") //overlays, but should be the same
+  SetResData(d, mp, "name") //duplicate of the above
+  SetResData(d, mp, "os")
+  SetResData(d, mp, "ram")
+  SetResData(d, mp, "cpus")
+  SetResData(d, mp, "gpu")
+  SetResData(d, mp, "storageTotal")
+  SetResData(d, mp, "storageUsed")
+  SetResData(d, mp, "usageRate")
+  SetResData(d, mp, "shutdownTimeoutInHours")
+  SetResData(d, mp, "shutdownTimeoutForces")
+  SetResData(d, mp, "performAutoSnapshot")
+  SetResData(d, mp, "autoSnapshotFrequency")
+  SetResData(d, mp, "autoSnapshotSaveCount")
+  SetResData(d, mp, "agentType")
+  SetResData(d, mp, "dtCreated")
+  SetResData(d, mp, "state")
+  SetResData(d, mp, "networkId") //overlays with null initially
+  SetResData(d, mp, "privateIpAddress")
+  SetResData(d, mp, "publicIpAddress")
+  SetResData(d, mp, "region") //overlays with null initially
+  SetResData(d, mp, "userId")
+  SetResData(d, mp, "teamId")
+  SetResData(d, mp, "scriptId")
+  SetResData(d, mp, "dtLastRun")
+
   return nil
 }
 
 func resourceMachineUpdate(d *schema.ResourceData, m interface{}) error {
+
+  log.Printf("[INFO] paperspace resourceMachineUpdate Client ready")
+
   return nil
 }
 
 func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
+  client := m.(PaperspaceClient).RestyClient
+
+  log.Printf("[INFO] paperspace resourceMachineDelete Client ready")
+
+  resp, err := client.R().
+  Post("/machines/" + d.Id() + "/destroyMachine")
+
+  if err != nil {
+    return fmt.Errorf("Error deleting paperspace machine: %s", err)
+  }
+
+  statusCode := resp.StatusCode()
+  log.Printf("[INFO] paperspace resourceMachineDelete StatusCode: %v", statusCode)
+  LogResponse("paperspace resourceMachineDelete", resp, err)
+  if statusCode != 204 && statusCode != 404 {
+    return fmt.Errorf("Error deleting paperspace machine: Response: %s", resp.Body())
+  }
+  if statusCode == 204 {
+    log.Printf("[INFO] paperspace resourceMachineDelete machine deleted successfully, StatusCode: %v", statusCode)
+  }
+  if statusCode == 404 {
+    log.Printf("[INFO] paperspace resourceMachineDelete machine already deleted, StatusCode: %v", statusCode)
+  }
+
   return nil
 }
 
@@ -202,6 +299,14 @@ func resourceMachine() *schema.Resource {
       "notificationEmail": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
+      },
+      "scriptId": &schema.Schema{
+          Type:     schema.TypeString,
+          Optional: true,
+      },
+      "dtLastRun": &schema.Schema{
+          Type:     schema.TypeString,
+          Computed: true,
       },
       "name": &schema.Schema{
           Type:     schema.TypeString,
