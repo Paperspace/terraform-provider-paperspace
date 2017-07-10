@@ -22,4 +22,5 @@ resource "paperspace_machine" "my-machine-1" {
   size = 50
   billingType = "hourly"
   templateId = "tqalmii" // Ubuntu 16.04 Server
+  scriptId = "${paperspace_script.my-script-1.id}"
 }
