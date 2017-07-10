@@ -17,9 +17,9 @@ resource "paperspace_script" "my-script-1" {
 
 resource "paperspace_machine" "my-machine-1" {
   region = "East Coast (NY2)" // defaults to provider region if not specified
+  name = "Terraform Test",
   machineType = "C1"
   size = 50
   billingType = "hourly"
-  machineName = "Terraform Test",
   templateId = "tqalmii" // Ubuntu 16.04 Server
 }
