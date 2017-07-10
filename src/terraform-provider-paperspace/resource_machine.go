@@ -221,6 +221,9 @@ func resourceMachine() *schema.Resource {
     Read:   resourceMachineRead,
     Update: resourceMachineUpdate,
     Delete: resourceMachineDelete,
+    Importer: &schema.ResourceImporter{
+        State: schema.ImportStatePassthrough,
+      },
 
     Schema: map[string]*schema.Schema{
       "region": &schema.Schema{
