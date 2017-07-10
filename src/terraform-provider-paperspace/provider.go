@@ -27,7 +27,8 @@ func Provider() *schema.Provider {
     },
 
     ResourcesMap: map[string]*schema.Resource{
-      "paperspace_machine": resourceMachine(),
+      "paperspace_machine":  resourceMachine(),
+      "paperspace_script":   resourceScript(),
     },
 
     ConfigureFunc: providerConfigure,

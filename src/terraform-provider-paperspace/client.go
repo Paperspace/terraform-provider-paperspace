@@ -30,6 +30,13 @@ func (m *MapIf) AppendIfSet(d *schema.ResourceData, k string) {
   }
 }
 
+func (m *MapIf) AppendAsIfSet(d *schema.ResourceData, k,nk string) {
+  v := d.Get(k)
+  if reflect.ValueOf(v).Interface() != reflect.Zero(reflect.TypeOf(v)).Interface() {
+    (*m)[nk] = v
+  }
+}
+
 func SetResDataFrom(d *schema.ResourceData, m map[string]interface{}, dn, n string) {
   v, ok := m[n]
   //log.Printf("%v %v\n", n, v)
