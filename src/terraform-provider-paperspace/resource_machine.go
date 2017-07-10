@@ -25,7 +25,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
   body.Append(d, "machineType")
   body.Append(d, "size")
   body.Append(d, "billingType")
-  body.Append(d, "machineName")
+  body.AppendAs(d, "name", "machineName")
   body.Append(d, "templateId")
   body.AppendIfSet(d, "networkId")
   body.AppendIfSet(d, "teamId")
@@ -80,8 +80,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 
   log.Printf("[INFO] paperspace resourceMachineCreate returned id: %v", id)
 
-  SetResDataFrom(d, mp, "machineName", "name") //overlays, but should be the same
-  SetResData(d, mp, "name") //duplicate of the above
+  SetResData(d, mp, "name")
   SetResData(d, mp, "os")
   SetResData(d, mp, "ram")
   SetResData(d, mp, "cpus")
@@ -153,8 +152,7 @@ func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
 
   log.Printf("[INFO] paperspace resourceMachineRead returned id: %v", id)
 
-  SetResDataFrom(d, mp, "machineName", "name") //overlays, but should be the same
-  SetResData(d, mp, "name") //duplicate of the above
+  SetResData(d, mp, "name")
   SetResData(d, mp, "os")
   SetResData(d, mp, "ram")
   SetResData(d, mp, "cpus")
@@ -241,7 +239,7 @@ func resourceMachine() *schema.Resource {
           Type:     schema.TypeString,
           Required: true,
       },
-      "machineName": &schema.Schema{
+      "name": &schema.Schema{
         Type:     schema.TypeString,
         Required: true,
       },
@@ -286,10 +284,6 @@ func resourceMachine() *schema.Resource {
           Optional: true,
       },
       "dtLastRun": &schema.Schema{
-          Type:     schema.TypeString,
-          Computed: true,
-      },
-      "name": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },

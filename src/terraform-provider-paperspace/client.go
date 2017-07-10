@@ -14,6 +14,11 @@ func (m *MapIf) Append(d *schema.ResourceData, k string) {
   (*m)[k] = v
 }
 
+func (m *MapIf) AppendAs(d *schema.ResourceData, k,nk string) {
+  v := d.Get(k)
+  (*m)[nk] = v
+}
+
 func (m *MapIf) AppendV(d *schema.ResourceData, k,v string) {
   (*m)[k] = v
 }
