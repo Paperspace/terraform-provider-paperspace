@@ -27,6 +27,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
   body.Append(d, "billingType")
   body.AppendAs(d, "name", "machineName")
   body.Append(d, "templateId")
+  body.AppendIfSet(d, "assignPublicIp")
   body.AppendIfSet(d, "networkId")
   body.AppendIfSet(d, "teamId")
   body.AppendIfSet(d, "userId")
@@ -249,6 +250,10 @@ func resourceMachine() *schema.Resource {
       "templateId": &schema.Schema{
           Type:     schema.TypeString,
           Required: true,
+      },
+      "assignPublicIp": &schema.Schema{
+          Type:     schema.TypeBool,
+          Optional: true,
       },
       "networkId": &schema.Schema{
           Type:     schema.TypeString,
