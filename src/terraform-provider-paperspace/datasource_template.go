@@ -12,11 +12,75 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
 
   log.Printf("[INFO] paperspace dataSourceTemplateRead Client ready")
 
-  id := d.Get("id").(string)
+  queryParam := false;
+  queryStr := "?"
+  id, ok := d.GetOk("id")
+  if ok {
+    queryStr += "id=" + id.(string)
+    queryParam = true
+  }
+  name, ok := d.GetOk("name")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "name=" + name.(string)
+    queryParam = true
+  }
+  label, ok := d.GetOk("label")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "label=" + label.(string)
+    queryParam = true
+  }
+  os, ok := d.GetOk("os")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "os=" + os.(string)
+    queryParam = true
+  }
+  dtCreated, ok := d.GetOk("dtCreated")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "dtCreated=" + dtCreated.(string)
+    queryParam = true
+  }
+  teamId, ok := d.GetOk("teamId")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "teamId=" + teamId.(string)
+    queryParam = true
+  }
+  userId, ok := d.GetOk("userId")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "userId=" + userId.(string)
+    queryParam = true
+  }
+  region, ok := d.GetOk("region")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "region=" + region.(string)
+    queryParam = true
+  }
+  if !queryParam {
+    return fmt.Errorf("Error reading paperspace template: must specify query filter properties")
+  }
 
   resp, err := client.R().
-  Get("/templates/getTemplates?id=" + id)
-
+  Get("/templates/getTemplates" + queryStr)
   if err != nil {
     return fmt.Errorf("Error reading paperspace template: %s", err)
   }
@@ -25,7 +89,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
   log.Printf("[INFO] paperspace dataSourceTemplateRead StatusCode: %v", statusCode)
   LogResponse("paperspace dataSourceTemplateRead", resp, err)
   if statusCode == 404 {
-    return fmt.Errorf("Error reading paperspace template: id not found %s",id)
+    return fmt.Errorf("Error reading paperspace template: templates not found")
   }
   if statusCode != 200 {
     return fmt.Errorf("Error reading paperspace template: Response: %s", resp.Body())
@@ -33,33 +97,26 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
 
   var f interface{}
   err = json.Unmarshal(resp.Body(), &f)
-
   if err != nil {
     return fmt.Errorf("Error unmarshalling paperspace template read response: %s", err)
   }
 
   mpa := f.([]interface{})
-
   if len(mpa) > 1 {
-    return fmt.Errorf("Error unmarshalling paperspace template read response: found more than one template for id %s", id)
+    return fmt.Errorf("Error reading paperspace template: found more than one template matching given properties")
   }
   if len(mpa) == 0 {
-    return fmt.Errorf("Error unmarshalling paperspace template read response: template id not found %s", id)
+    return fmt.Errorf("Error reading paperspace template: no template found matching given properties")
   }
 
   mp, ok := mpa[0].(map[string]interface{})
   if !ok {
-    return fmt.Errorf("Error unmarshalling paperspace template read response: template id not found %s", id)
+    return fmt.Errorf("Error unmarshalling paperspace template read response: no templates not found")
   }
 
   idr, _ := mp["id"].(string)
-
   if idr == "" {
-    return fmt.Errorf("Error unmarshalling paperspace template read response: template id not found %s", id)
-  }
-
-  if idr != id {
-    return fmt.Errorf("Error unmarshalling paperspace template read response: found template id %s does not match id %v", idr, id)
+    return fmt.Errorf("Error unmarshalling paperspace template read response: no template id found for template")
   }
 
   log.Printf("[INFO] paperspace dataSourceTemplateRead template id: %v", idr)
@@ -84,35 +141,35 @@ func dataSourceTemplate() *schema.Resource {
 		Schema: map[string]*schema.Schema{
       "id": &schema.Schema{
         Type:     schema.TypeString,
-        Required: true,
+        Optional: true,
       },
       "name": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "label": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "os": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "dtCreated": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "teamId": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "userId": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "region": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
     },
 	}

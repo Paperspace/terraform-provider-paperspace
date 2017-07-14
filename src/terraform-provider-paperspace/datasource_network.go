@@ -12,11 +12,67 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 
   log.Printf("[INFO] paperspace dataSourceNetworkRead Client ready")
 
-  id := d.Get("id").(string)
+  queryParam := false;
+  queryStr := "?"
+  id, ok := d.GetOk("id")
+  if ok {
+    queryStr += "id=" + id.(string)
+    queryParam = true
+  }
+  name, ok := d.GetOk("name")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "name=" + name.(string)
+    queryParam = true
+  }
+  region, ok := d.GetOk("region")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "region=" + region.(string)
+    queryParam = true
+  }
+  dtCreated, ok := d.GetOk("dtCreated")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "dtCreated=" + dtCreated.(string)
+    queryParam = true
+  }
+  network, ok := d.GetOk("network")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "network=" + network.(string)
+    queryParam = true
+  }
+  netmask, ok := d.GetOk("netmask")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "netmask=" + netmask.(string)
+    queryParam = true
+  }
+  teamId, ok := d.GetOk("teamId")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "teamId=" + teamId.(string)
+    queryParam = true
+  }
+  if !queryParam {
+    return fmt.Errorf("Error reading paperspace network: must specify query filter properties")
+  }
 
   resp, err := client.R().
-  Get("/networks/getNetworks?id=" + id)
-
+  Get("/networks/getNetworks" + queryStr)
   if err != nil {
     return fmt.Errorf("Error reading paperspace network: %s", err)
   }
@@ -25,7 +81,7 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
   log.Printf("[INFO] paperspace dataSourceNetworkRead StatusCode: %v", statusCode)
   LogResponse("paperspace dataSourceNetworkRead", resp, err)
   if statusCode == 404 {
-    return fmt.Errorf("Error reading paperspace network: id not found %s",id)
+    return fmt.Errorf("Error reading paperspace network: networks not found")
   }
   if statusCode != 200 {
     return fmt.Errorf("Error reading paperspace network: Response: %s", resp.Body())
@@ -33,33 +89,26 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 
   var f interface{}
   err = json.Unmarshal(resp.Body(), &f)
-
   if err != nil {
     return fmt.Errorf("Error unmarshalling paperspace network read response: %s", err)
   }
 
   mpa := f.([]interface{})
-
   if len(mpa) > 1 {
-    return fmt.Errorf("Error unmarshalling paperspace network read response: found more than one network for id %s", id)
+    return fmt.Errorf("Error reading paperspace network: found more than one network matching given properties")
   }
   if len(mpa) == 0 {
-    return fmt.Errorf("Error unmarshalling paperspace network read response: network id not found %s", id)
+    return fmt.Errorf("Error reading paperspace network: no network found matching given properties")
   }
 
   mp, ok := mpa[0].(map[string]interface{})
   if !ok {
-    return fmt.Errorf("Error unmarshalling paperspace network read response: network id not found %s", id)
+    return fmt.Errorf("Error unmarshalling paperspace network read response: no networks not found")
   }
 
   idr, _ := mp["id"].(string)
-
   if idr == "" {
-    return fmt.Errorf("Error unmarshalling paperspace network read response: network id not found %s", id)
-  }
-
-  if idr != id {
-    return fmt.Errorf("Error unmarshalling paperspace network read response: found network id %s does not match id %v", idr, id)
+    return fmt.Errorf("Error unmarshalling paperspace network read response: no network id found for network")
   }
 
   log.Printf("[INFO] paperspace dataSourceNetworkRead network id: %v", idr)
@@ -83,35 +132,35 @@ func dataSourceNetwork() *schema.Resource {
 		Schema: map[string]*schema.Schema{
       "id": &schema.Schema{
         Type:     schema.TypeString,
-        Required: true,
+        Optional: true,
       },
       "name": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "label": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "os": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "dtCreated": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "teamId": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "userId": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "region": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
     },
 	}

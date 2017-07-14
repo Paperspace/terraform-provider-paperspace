@@ -12,11 +12,59 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
 
   log.Printf("[INFO] paperspace dataSourceUserRead Client ready")
 
-  id := d.Get("id").(string)
+  queryParam := false;
+  queryStr := "?"
+  id, ok := d.GetOk("id")
+  if ok {
+    queryStr += "id=" + id.(string)
+    queryParam = true
+  }
+  email, ok := d.GetOk("email")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "email=" + email.(string)
+    queryParam = true
+  }
+  firstname, ok := d.GetOk("firstname")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "firstname=" + firstname.(string)
+    queryParam = true
+  }
+  lastname, ok := d.GetOk("lastname")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "lastname=" + lastname.(string)
+    queryParam = true
+  }
+  dtCreated, ok := d.GetOk("dtCreated")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "dtCreated=" + dtCreated.(string)
+    queryParam = true
+  }
+  teamId, ok := d.GetOk("teamId")
+  if ok {
+    if queryParam {
+      queryStr += "&"
+    }
+    queryStr += "teamId=" + teamId.(string)
+    queryParam = true
+  }
+  if !queryParam {
+    return fmt.Errorf("Error reading paperspace user: must specify query filter properties")
+  }
 
   resp, err := client.R().
-  Get("/users/getUsers?id=" + id)
-
+  Get("/users/getUsers" + queryStr)
   if err != nil {
     return fmt.Errorf("Error reading paperspace user: %s", err)
   }
@@ -25,7 +73,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
   log.Printf("[INFO] paperspace dataSourceUserRead StatusCode: %v", statusCode)
   LogResponse("paperspace dataSourceUserRead", resp, err)
   if statusCode == 404 {
-    return fmt.Errorf("Error reading paperspace user: id not found %s",id)
+    return fmt.Errorf("Error reading paperspace user: users not found")
   }
   if statusCode != 200 {
     return fmt.Errorf("Error reading paperspace user: Response: %s", resp.Body())
@@ -33,33 +81,26 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
 
   var f interface{}
   err = json.Unmarshal(resp.Body(), &f)
-
   if err != nil {
     return fmt.Errorf("Error unmarshalling paperspace user read response: %s", err)
   }
 
   mpa := f.([]interface{})
-
   if len(mpa) > 1 {
-    return fmt.Errorf("Error unmarshalling paperspace user read response: found more than one user for id %s", id)
+    return fmt.Errorf("Error reading paperspace user: found more than one user matching given properties")
   }
   if len(mpa) == 0 {
-    return fmt.Errorf("Error unmarshalling paperspace user read response: user id not found %s", id)
+    return fmt.Errorf("Error reading paperspace user: no user found matching given properties")
   }
 
   mp, ok := mpa[0].(map[string]interface{})
   if !ok {
-    return fmt.Errorf("Error unmarshalling paperspace user read response: user id not found %s", id)
+    return fmt.Errorf("Error unmarshalling paperspace user read response: no users not found")
   }
 
   idr, _ := mp["id"].(string)
-
   if idr == "" {
-    return fmt.Errorf("Error unmarshalling paperspace user read response: user id not found %s", id)
-  }
-
-  if idr != id {
-    return fmt.Errorf("Error unmarshalling paperspace user read response: found user id %s does not match id %v", idr, id)
+    return fmt.Errorf("Error unmarshalling paperspace user read response: no user id found for user")
   }
 
   log.Printf("[INFO] paperspace dataSourceUserRead user id: %v", idr)
@@ -82,27 +123,27 @@ func dataSourceUser() *schema.Resource {
 		Schema: map[string]*schema.Schema{
       "id": &schema.Schema{
         Type:     schema.TypeString,
-        Required: true,
+        Optional: true,
       },
       "email": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "firstname": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "lastname": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "dtCreated": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
       "teamId": &schema.Schema{
         Type:     schema.TypeString,
-        Computed: true,
+        Optional: true,
       },
     },
 	}
