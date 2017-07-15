@@ -5,6 +5,7 @@ import (
   "fmt"
   "github.com/hashicorp/terraform/helper/schema"
   "log"
+  "net/url"
 )
 
 func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
@@ -16,7 +17,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
   queryStr := "?"
   id, ok := d.GetOk("id")
   if ok {
-    queryStr += "id=" + id.(string)
+    queryStr += "id=" + url.QueryEscape(id.(string))
     queryParam = true
   }
   email, ok := d.GetOk("email")
@@ -24,7 +25,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "email=" + email.(string)
+    queryStr += "email=" + url.QueryEscape(email.(string))
     queryParam = true
   }
   firstname, ok := d.GetOk("firstname")
@@ -32,7 +33,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "firstname=" + firstname.(string)
+    queryStr += "firstname=" + url.QueryEscape(firstname.(string))
     queryParam = true
   }
   lastname, ok := d.GetOk("lastname")
@@ -40,7 +41,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "lastname=" + lastname.(string)
+    queryStr += "lastname=" + url.QueryEscape(lastname.(string))
     queryParam = true
   }
   dtCreated, ok := d.GetOk("dtCreated")
@@ -48,7 +49,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "dtCreated=" + dtCreated.(string)
+    queryStr += "dtCreated=" + url.QueryEscape(dtCreated.(string))
     queryParam = true
   }
   teamId, ok := d.GetOk("teamId")
@@ -56,7 +57,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "teamId=" + teamId.(string)
+    queryStr += "teamId=" + url.QueryEscape(teamId.(string))
     queryParam = true
   }
   if !queryParam {

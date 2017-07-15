@@ -5,6 +5,7 @@ import (
   "fmt"
   "github.com/hashicorp/terraform/helper/schema"
   "log"
+  "net/url"
 )
 
 func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
@@ -16,7 +17,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
   queryStr := "?"
   id, ok := d.GetOk("id")
   if ok {
-    queryStr += "id=" + id.(string)
+    queryStr += "id=" + url.QueryEscape(id.(string))
     queryParam = true
   }
   name, ok := d.GetOk("name")
@@ -24,7 +25,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "name=" + name.(string)
+    queryStr += "name=" + url.QueryEscape(name.(string))
     queryParam = true
   }
   label, ok := d.GetOk("label")
@@ -32,7 +33,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "label=" + label.(string)
+    queryStr += "label=" + url.QueryEscape(label.(string))
     queryParam = true
   }
   os, ok := d.GetOk("os")
@@ -40,7 +41,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "os=" + os.(string)
+    queryStr += "os=" + url.QueryEscape(os.(string))
     queryParam = true
   }
   dtCreated, ok := d.GetOk("dtCreated")
@@ -48,7 +49,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "dtCreated=" + dtCreated.(string)
+    queryStr += "dtCreated=" + url.QueryEscape(dtCreated.(string))
     queryParam = true
   }
   teamId, ok := d.GetOk("teamId")
@@ -56,7 +57,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "teamId=" + teamId.(string)
+    queryStr += "teamId=" + url.QueryEscape(teamId.(string))
     queryParam = true
   }
   userId, ok := d.GetOk("userId")
@@ -64,7 +65,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "userId=" + userId.(string)
+    queryStr += "userId=" + url.QueryEscape(userId.(string))
     queryParam = true
   }
   region, ok := d.GetOk("region")
@@ -72,7 +73,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     if queryParam {
       queryStr += "&"
     }
-    queryStr += "region=" + region.(string)
+    queryStr += "region=" + url.QueryEscape(region.(string))
     queryParam = true
   }
   if !queryParam {
