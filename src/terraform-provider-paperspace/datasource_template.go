@@ -44,7 +44,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     queryStr += "os=" + url.QueryEscape(os.(string))
     queryParam = true
   }
-  dtCreated, ok := d.GetOk("dtCreated")
+  dtCreated, ok := d.GetOk("dt_created")
   if ok {
     if queryParam {
       queryStr += "&"
@@ -52,7 +52,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     queryStr += "dtCreated=" + url.QueryEscape(dtCreated.(string))
     queryParam = true
   }
-  teamId, ok := d.GetOk("teamId")
+  teamId, ok := d.GetOk("team_id")
   if ok {
     if queryParam {
       queryStr += "&"
@@ -60,7 +60,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
     queryStr += "teamId=" + url.QueryEscape(teamId.(string))
     queryParam = true
   }
-  userId, ok := d.GetOk("userId")
+  userId, ok := d.GetOk("user_id")
   if ok {
     if queryParam {
       queryStr += "&"
@@ -125,9 +125,9 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
   SetResData(d, mp, "name")
   SetResData(d, mp, "label")
   SetResData(d, mp, "os")
-  SetResData(d, mp, "dtCreated")
-  SetResData(d, mp, "teamId")
-  SetResData(d, mp, "userId")
+  SetResDataFrom(d, mp, "dt_created", "dtCreated")
+  SetResDataFrom(d, mp, "team_id", "teamId")
+  SetResDataFrom(d, mp, "user_id", "userId")
   SetResData(d, mp, "region")
 
   d.SetId(idr)
@@ -156,15 +156,15 @@ func dataSourceTemplate() *schema.Resource {
         Type:     schema.TypeString,
         Optional: true,
       },
-      "dtCreated": &schema.Schema{
+      "dt_created": &schema.Schema{
         Type:     schema.TypeString,
         Optional: true,
       },
-      "teamId": &schema.Schema{
+      "team_id": &schema.Schema{
         Type:     schema.TypeString,
         Optional: true,
       },
-      "userId": &schema.Schema{
+      "user_id": &schema.Schema{
         Type:     schema.TypeString,
         Optional: true,
       },

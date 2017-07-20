@@ -44,7 +44,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
     queryStr += "lastname=" + url.QueryEscape(lastname.(string))
     queryParam = true
   }
-  dtCreated, ok := d.GetOk("dtCreated")
+  dtCreated, ok := d.GetOk("dt_created")
   if ok {
     if queryParam {
       queryStr += "&"
@@ -52,7 +52,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
     queryStr += "dtCreated=" + url.QueryEscape(dtCreated.(string))
     queryParam = true
   }
-  teamId, ok := d.GetOk("teamId")
+  teamId, ok := d.GetOk("team_id")
   if ok {
     if queryParam {
       queryStr += "&"
@@ -109,8 +109,8 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
   SetResData(d, mp, "email")
   SetResData(d, mp, "firstname")
   SetResData(d, mp, "lastname")
-  SetResData(d, mp, "dtCreated")
-  SetResData(d, mp, "teamId")
+  SetResDataFrom(d, mp, "dt_created", "dtCreated")
+  SetResDataFrom(d, mp, "team_id", "teamId")
 
   d.SetId(idr)
 
@@ -138,11 +138,11 @@ func dataSourceUser() *schema.Resource {
         Type:     schema.TypeString,
         Optional: true,
       },
-      "dtCreated": &schema.Schema{
+      "dt_created": &schema.Schema{
         Type:     schema.TypeString,
         Optional: true,
       },
-      "teamId": &schema.Schema{
+      "team_id": &schema.Schema{
         Type:     schema.TypeString,
         Optional: true,
       },

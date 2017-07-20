@@ -22,10 +22,10 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 
   body := make(MapIf)
   body.AppendAs(d, "name", "scriptName")
-  body.Append(d, "scriptText")
+  body.AppendAs(d, "script_text", "scriptText")
   body.AppendAsIfSet(d, "description", "scriptDescription")
-  body.AppendIfSet(d, "isEnabled")
-  body.AppendIfSet(d, "runOnce")
+  body.AppendAsIfSet(d, "is_enabled", "isEnabled")
+  body.AppendAsIfSet(d, "run_once", "runOnce")
 
   data, _ := json.MarshalIndent(body, "", "  ")
   log.Println(string(data))
@@ -63,11 +63,11 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 
   SetResData(d, mp, "name")
   SetResData(d, mp, "description")
-  SetResData(d, mp, "ownerType")
-  SetResData(d, mp, "ownerId")
-  SetResData(d, mp, "dtCreated")
-  SetResData(d, mp, "isEnabled")
-  SetResData(d, mp, "runOnce")
+  SetResDataFrom(d, mp, "owner_type", "ownerType")
+  SetResDataFrom(d, mp, "owner_id", "ownerId")
+  SetResDataFrom(d, mp, "dt_created", "dtCreated")
+  SetResDataFrom(d, mp, "is_enabled", "isEnabled")
+  SetResDataFrom(d, mp, "run_once", "runOnce")
 
   d.SetId(id);
 
@@ -118,11 +118,11 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 
   SetResData(d, mp, "name")
   SetResData(d, mp, "description")
-  SetResData(d, mp, "ownerType")
-  SetResData(d, mp, "ownerId")
-  SetResData(d, mp, "dtCreated")
-  SetResData(d, mp, "isEnabled")
-  SetResData(d, mp, "runOnce")
+  SetResDataFrom(d, mp, "owner_type", "ownerType")
+  SetResDataFrom(d, mp, "owner_id", "ownerId")
+  SetResDataFrom(d, mp, "dt_created", "dtCreated")
+  SetResDataFrom(d, mp, "is_enabled", "isEnabled")
+  SetResDataFrom(d, mp, "run_once", "runOnce")
 
   client = m.(PaperspaceClient).RestyClient
 
@@ -144,7 +144,7 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
     return fmt.Errorf("Error reading paperspace script text: Response: %s", resp.Body())
   }
 
-  d.Set("scriptText", resp.Body())
+  d.Set("script_text", resp.Body())
 
   return nil
 }
@@ -203,27 +203,27 @@ func resourceScript() *schema.Resource {
         Type:     schema.TypeString,
         Optional: true,
       },
-      "scriptText": &schema.Schema{
+      "script_text": &schema.Schema{
         Type:     schema.TypeString,
         Required: true,
       },
-      "ownerType": &schema.Schema{
+      "owner_type": &schema.Schema{
         Type:     schema.TypeString,
         Computed: true,
       },
-      "ownerId": &schema.Schema{
+      "owner_id": &schema.Schema{
         Type:     schema.TypeString,
         Computed: true,
       },
-      "dtCreated": &schema.Schema{
+      "dt_created": &schema.Schema{
         Type:     schema.TypeString,
         Computed: true,
       },
-      "isEnabled": &schema.Schema{
+      "is_enabled": &schema.Schema{
         Type:     schema.TypeBool,
         Optional: true,
       },
-      "runOnce": &schema.Schema{
+      "run_once": &schema.Schema{
         Type:     schema.TypeBool,
         Optional: true,
       },

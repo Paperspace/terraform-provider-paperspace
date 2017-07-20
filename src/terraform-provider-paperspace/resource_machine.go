@@ -22,21 +22,21 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 
   body := make(MapIf)
   body.AppendV(d, "region", region)
-  body.Append(d, "machineType")
+  body.AppendAs(d, "machine_type", "machineType")
   body.Append(d, "size")
-  body.Append(d, "billingType")
+  body.AppendAs(d, "billing_type", "billingType")
   body.AppendAs(d, "name", "machineName")
-  body.Append(d, "templateId")
-  body.AppendIfSet(d, "assignPublicIp")
-  body.AppendIfSet(d, "networkId")
-  body.AppendIfSet(d, "teamId")
-  body.AppendIfSet(d, "userId")
+  body.AppendAs(d, "template_id", "templateId")
+  body.AppendAsIfSet(d, "assign_public_ip", "assignPublicIp")
+  body.AppendAsIfSet(d, "network_id", "networkId")
+  body.AppendAsIfSet(d, "team_id", "teamId")
+  body.AppendAsIfSet(d, "user_id", "userId")
   body.AppendIfSet(d, "email")
   body.AppendIfSet(d, "password")
-  body.AppendIfSet(d, "firstName")
-  body.AppendIfSet(d, "lastName")
-  body.AppendIfSet(d, "notificationEmail")
-  body.AppendIfSet(d, "scriptId")
+  body.AppendAsIfSet(d, "firstname", "firstName")
+  body.AppendAsIfSet(d, "lastname", "lastName")
+  body.AppendAsIfSet(d, "notification_email", "notificationEmail")
+  body.AppendAsIfSet(d, "script_id", "scriptId")
 
   data, _ := json.MarshalIndent(body, "", "  ")
   log.Println(string(data))
@@ -86,25 +86,25 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
   SetResData(d, mp, "ram")
   SetResData(d, mp, "cpus")
   SetResData(d, mp, "gpu")
-  SetResData(d, mp, "storageTotal")
-  SetResData(d, mp, "storageUsed")
-  SetResData(d, mp, "usageRate")
-  SetResData(d, mp, "shutdownTimeoutInHours")
-  SetResData(d, mp, "shutdownTimeoutForces")
-  SetResData(d, mp, "performAutoSnapshot")
-  SetResData(d, mp, "autoSnapshotFrequency")
-  SetResData(d, mp, "autoSnapshotSaveCount")
-  SetResData(d, mp, "agentType")
-  SetResData(d, mp, "dtCreated")
+  SetResDataFrom(d, mp, "storage_total", "storageTotal")
+  SetResDataFrom(d, mp, "storage_used", "storageUsed")
+  SetResDataFrom(d, mp, "usage_rate", "usageRate")
+  SetResDataFrom(d, mp, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
+  SetResDataFrom(d, mp, "shutdown_timeout_forces", "shutdownTimeoutForces")
+  SetResDataFrom(d, mp, "perform_auto_snapshot", "performAutoSnapshot")
+  SetResDataFrom(d, mp, "auto_snapshot_frequency", "autoSnapshotFrequency")
+  SetResDataFrom(d, mp, "auto_snapshot_save_count", "autoSnapshotSaveCount")
+  SetResDataFrom(d, mp, "agent_type", "agentType")
+  SetResDataFrom(d, mp, "dt_created", "dtCreated")
   SetResData(d, mp, "state")
-  SetResData(d, mp, "networkId") //overlays with null initially
-  SetResData(d, mp, "privateIpAddress")
-  SetResData(d, mp, "publicIpAddress")
+  SetResDataFrom(d, mp, "network_id", "networkId") //overlays with null initially
+  SetResDataFrom(d, mp, "private_ip_address", "privateIpAddress")
+  SetResDataFrom(d, mp, "public_ip_address", "publicIpAddress")
   SetResData(d, mp, "region") //overlays with null initially
-  SetResData(d, mp, "userId")
-  SetResData(d, mp, "teamId")
-  SetResData(d, mp, "scriptId")
-  SetResData(d, mp, "dtLastRun")
+  SetResDataFrom(d, mp, "user_id", "userId")
+  SetResDataFrom(d, mp, "team_id", "teamId")
+  SetResDataFrom(d, mp, "script_id", "scriptId")
+  SetResDataFrom(d, mp, "dt_last_run", "dtLastRun")
 
   d.SetId(id);
 
@@ -158,25 +158,25 @@ func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
   SetResData(d, mp, "ram")
   SetResData(d, mp, "cpus")
   SetResData(d, mp, "gpu")
-  SetResData(d, mp, "storageTotal")
-  SetResData(d, mp, "storageUsed")
-  SetResData(d, mp, "usageRate")
-  SetResData(d, mp, "shutdownTimeoutInHours")
-  SetResData(d, mp, "shutdownTimeoutForces")
-  SetResData(d, mp, "performAutoSnapshot")
-  SetResData(d, mp, "autoSnapshotFrequency")
-  SetResData(d, mp, "autoSnapshotSaveCount")
-  SetResData(d, mp, "agentType")
-  SetResData(d, mp, "dtCreated")
+  SetResDataFrom(d, mp, "storage_total", "storageTotal")
+  SetResDataFrom(d, mp, "storage_used", "storageUsed")
+  SetResDataFrom(d, mp, "usage_rate", "usageRate")
+  SetResDataFrom(d, mp, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
+  SetResDataFrom(d, mp, "shutdown_timeout_forces", "shutdownTimeoutForces")
+  SetResDataFrom(d, mp, "perform_auto_snapshot", "performAutoSnapshot")
+  SetResDataFrom(d, mp, "auto_snapshot_frequency", "autoSnapshotFrequency")
+  SetResDataFrom(d, mp, "auto_snapshot_save_count", "autoSnapshotSaveCount")
+  SetResDataFrom(d, mp, "agent_type", "agentType")
+  SetResDataFrom(d, mp, "dt_created", "dtCreated")
   SetResData(d, mp, "state")
-  SetResData(d, mp, "networkId") //overlays with null initially
-  SetResData(d, mp, "privateIpAddress")
-  SetResData(d, mp, "publicIpAddress")
+  SetResDataFrom(d, mp, "network_id", "networkId") //overlays with null initially
+  SetResDataFrom(d, mp, "private_ip_address", "privateIpAddress")
+  SetResDataFrom(d, mp, "public_ip_address", "publicIpAddress")
   SetResData(d, mp, "region") //overlays with null initially
-  SetResData(d, mp, "userId")
-  SetResData(d, mp, "teamId")
-  SetResData(d, mp, "scriptId")
-  SetResData(d, mp, "dtLastRun")
+  SetResDataFrom(d, mp, "user_id", "userId")
+  SetResDataFrom(d, mp, "team_id", "teamId")
+  SetResDataFrom(d, mp, "script_id", "scriptId")
+  SetResDataFrom(d, mp, "dt_last_run", "dtLastRun")
 
   return nil
 }
@@ -231,7 +231,7 @@ func resourceMachine() *schema.Resource {
           Type:     schema.TypeString,
           Optional: true,
       },
-      "machineType": &schema.Schema{
+      "machine_type": &schema.Schema{
           Type:     schema.TypeString,
           Required: true,
       },
@@ -239,7 +239,7 @@ func resourceMachine() *schema.Resource {
           Type:     schema.TypeInt,
           Required: true,
       },
-      "billingType": &schema.Schema{
+      "billing_type": &schema.Schema{
           Type:     schema.TypeString,
           Required: true,
       },
@@ -247,23 +247,23 @@ func resourceMachine() *schema.Resource {
         Type:     schema.TypeString,
         Required: true,
       },
-      "templateId": &schema.Schema{
+      "template_id": &schema.Schema{
           Type:     schema.TypeString,
           Required: true,
       },
-      "assignPublicIp": &schema.Schema{
+      "assign_public_ip": &schema.Schema{
           Type:     schema.TypeBool,
           Optional: true,
       },
-      "networkId": &schema.Schema{
+      "network_id": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
       },
-      "teamId": &schema.Schema{
+      "team_id": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
       },
-      "userId": &schema.Schema{
+      "user_id": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
       },
@@ -275,23 +275,23 @@ func resourceMachine() *schema.Resource {
           Type:     schema.TypeString,
           Optional: true,
       },
-      "firstName": &schema.Schema{
+      "firstname": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
       },
-      "lastName": &schema.Schema{
+      "lastname": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
       },
-      "notificationEmail": &schema.Schema{
+      "notification_email": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
       },
-      "scriptId": &schema.Schema{
+      "script_id": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
       },
-      "dtLastRun": &schema.Schema{
+      "dt_last_run": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
@@ -311,43 +311,43 @@ func resourceMachine() *schema.Resource {
           Type:     schema.TypeString,
           Computed: true,
       },
-      "storageTotal": &schema.Schema{
+      "storage_total": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
-      "storageUsed": &schema.Schema{
+      "storage_used": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
-      "usageRate": &schema.Schema{
+      "usage_rate": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
-      "shutdownTimeoutInHours": &schema.Schema{
+      "shutdown_timeout_in_hours": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
-      "shutdownTimeoutForces": &schema.Schema{
+      "shutdown_timeout_forces": &schema.Schema{
           Type:     schema.TypeBool,
           Computed: true,
       },
-      "performAutoSnapshot": &schema.Schema{
+      "perform_auto_snapshot": &schema.Schema{
           Type:     schema.TypeBool,
           Computed: true,
       },
-      "autoSnapshotFrequency": &schema.Schema{
+      "auto_snapshot_frequency": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
-      "autoSnapshotSaveCount": &schema.Schema{
+      "auto_snapshot_save_count": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
-      "agentType": &schema.Schema{
+      "agent_type": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
-      "dtCreated": &schema.Schema{
+      "dt_created": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
@@ -355,11 +355,11 @@ func resourceMachine() *schema.Resource {
           Type:     schema.TypeString,
           Computed: true,
       },
-      "privateIpAddress": &schema.Schema{
+      "private_ip_address": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },
-      "publicIpAddress": &schema.Schema{
+      "public_ip_address": &schema.Schema{
           Type:     schema.TypeString,
           Computed: true,
       },

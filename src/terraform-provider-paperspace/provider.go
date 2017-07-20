@@ -9,12 +9,12 @@ import (
 func Provider() *schema.Provider {
   return &schema.Provider{
     Schema: map[string]*schema.Schema{
-      "apiKey": &schema.Schema{
+      "api_key": &schema.Schema{
         Type:        schema.TypeString,
         Optional:    true,
         DefaultFunc: envDefaultFunc("PAPERSPACE_API_KEY"),
       },
-      "apiHost": &schema.Schema{
+      "api_host": &schema.Schema{
         Type:        schema.TypeString,
         Optional:    true,
         DefaultFunc: envDefaultFuncAllowMissingDefault("PAPERSPACE_API_HOST", "https://api.paperspace.io"),
@@ -71,13 +71,13 @@ func envDefaultFuncAllowMissingDefault(k string, d string) schema.SchemaDefaultF
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
-		ApiKey: d.Get("apiKey").(string),
-		ApiHost: d.Get("apiHost").(string),
+		ApiKey: d.Get("api_key").(string),
+		ApiHost: d.Get("api_host").(string),
 		Region: d.Get("region").(string),
 	}
 
-  log.Printf("[INFO] paperspace provider apiKey %v", config.ApiKey)
-  log.Printf("[INFO] paperspace provider apiHost %v", config.ApiHost)
+  log.Printf("[INFO] paperspace provider api_key %v", config.ApiKey)
+  log.Printf("[INFO] paperspace provider api_host %v", config.ApiHost)
   if config.Region != "" {
     log.Printf("[INFO] paperspace provider region %v", config.Region)
   }

@@ -36,7 +36,7 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
     queryStr += "region=" + url.QueryEscape(region.(string))
     queryParam = true
   }
-  dtCreated, ok := d.GetOk("dtCreated")
+  dtCreated, ok := d.GetOk("dt_created")
   if ok {
     if queryParam {
       queryStr += "&"
@@ -60,7 +60,7 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
     queryStr += "netmask=" + url.QueryEscape(netmask.(string))
     queryParam = true
   }
-  teamId, ok := d.GetOk("teamId")
+  teamId, ok := d.GetOk("team_id")
   if ok {
     if queryParam {
       queryStr += "&"
@@ -116,10 +116,10 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 
   SetResData(d, mp, "name")
   SetResData(d, mp, "region")
-  SetResData(d, mp, "dtCreated")
+  SetResDataFrom(d, mp, "dt_created", "dtCreated")
   SetResData(d, mp, "network")
   SetResData(d, mp, "netmask")
-  SetResData(d, mp, "teamId")
+  SetResDataFrom(d, mp, "team_id", "teamId")
 
   d.SetId(idr)
 
@@ -143,7 +143,7 @@ func dataSourceNetwork() *schema.Resource {
         Type:     schema.TypeString,
         Optional: true,
       },
-      "dtCreated": &schema.Schema{
+      "dt_created": &schema.Schema{
         Type:     schema.TypeString,
         Optional: true,
       },
@@ -155,7 +155,7 @@ func dataSourceNetwork() *schema.Resource {
         Type:     schema.TypeString,
         Optional: true,
       },
-      "teamId": &schema.Schema{
+      "team_id": &schema.Schema{
         Type:     schema.TypeString,
         Optional: true,
       },

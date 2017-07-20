@@ -1,5 +1,5 @@
 provider "paperspace" {
-  apiKey = "1be4f97..."
+  api_key = "1be4f97..."
   region = "East Coast (NY2)"
 }
 
@@ -14,24 +14,24 @@ data "paperspace_template" "my-template-1" {
 resource "paperspace_script" "my-script-1" {
   name = "My Script"
   description = "a short description"
-  scriptText = <<EOF
+  script_text = <<EOF
 #!/bin/bash
 echo "Hello, World" > index.html
 ufw allow 8080
 nohup busybox httpd -f -p 8080 &
 EOF
-  isEnabled = true
-  runOnce = false
+  is_enabled = true
+  run_once = false
 }
 
 resource "paperspace_machine" "my-machine-1" {
   region = "East Coast (NY2)" // defaults to provider region if not specified
   name = "Terraform Test",
-  machineType = "C1"
+  machine_type = "C1"
   size = 50
-  billingType = "hourly"
-  assignPublicIp = true
-  templateId = "${data.paperspace_template.my-template-1.id}"
-  userId = "${data.paperspace_user.my-user-1.id}"
-  scriptId = "${paperspace_script.my-script-1.id}"
+  billing_type = "hourly"
+  assign_public_ip = true
+  template_id = "${data.paperspace_template.my-template-1.id}"
+  user_id = "${data.paperspace_user.my-user-1.id}"
+  script_id = "${paperspace_script.my-script-1.id}"
 }
