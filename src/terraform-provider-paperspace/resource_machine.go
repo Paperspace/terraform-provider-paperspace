@@ -230,6 +230,7 @@ func resourceMachine() *schema.Resource {
       "region": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
+          Computed: true,
       },
       "machine_type": &schema.Schema{
           Type:     schema.TypeString,
@@ -258,14 +259,17 @@ func resourceMachine() *schema.Resource {
       "network_id": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
+          Computed: true,
       },
       "team_id": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
+          Computed: true,
       },
       "user_id": &schema.Schema{
           Type:     schema.TypeString,
           Optional: true,
+          Computed: true,
       },
       "email": &schema.Schema{
           Type:     schema.TypeString,

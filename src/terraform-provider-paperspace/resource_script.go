@@ -222,10 +222,12 @@ func resourceScript() *schema.Resource {
       "is_enabled": &schema.Schema{
         Type:     schema.TypeBool,
         Optional: true,
+        Computed: true,
       },
       "run_once": &schema.Schema{
         Type:     schema.TypeBool,
         Optional: true,
+        Computed: true,
       },
     },
   }
