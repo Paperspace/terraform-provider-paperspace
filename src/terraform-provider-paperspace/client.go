@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
-	"gopkg.in/resty.v0"
 	"log"
 	"reflect"
+
+	"github.com/hashicorp/terraform/helper/schema"
+	"gopkg.in/resty.v0"
 )
 
 type MapIf map[string]interface{}

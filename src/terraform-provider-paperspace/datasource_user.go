@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"net/url"
+
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
