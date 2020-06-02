@@ -9,16 +9,17 @@ Note: currently this provider is offered as a terraform 'private cloud' provider
 
 ## Downloads
 
-Linux x64 [terraform-provider-paperspace](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace)
+MacOS x64 [terraform-provider-paperspace-darwin](https://ps-terraform.s3.amazonaws.com/terraform-provider-paperspace-darwin)¹
 
-Windows x64 [terraform-provider-paperspace.exe](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace.exe)
+Linux x64 [terraform-provider-paperspace](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace)²
 
-Note: The these downloads were built with go 1.8.3 and tested with terraform 0.9.11
+Windows x64 [terraform-provider-paperspace.exe](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace.exe)²
+
+¹ Build with go 1.14 and tested with terraform 0.12.26
+² Built with go 1.8.3 and tested with terraform 0.9.11
 
 ## Installation and Testing
 1) Install [terraform](https://www.terraform.io/downloads.html) and make sure it is in your path.
-
-Note: this release of the Paperspace provider was tested with terraform 0.9.11
 
 2) Download the Paperspace terraform provider from one of the links above, or build it from source as described below.
 
