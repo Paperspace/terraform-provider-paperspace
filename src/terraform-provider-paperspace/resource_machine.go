@@ -53,11 +53,11 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] paperspace resourceMachineCreate StatusCode: %v", statusCode)
 	LogResponse("paperspace resourceMachineCreate", resp, err)
 	if statusCode != 200 {
-		return fmt.Errorf("Error creating paperspace machine: Response: %s", resp.Body())
+		return fmt.Errorf("Error creating paperspace machine: Response: %s", resp.Body)
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body(), &f)
+	err = json.Unmarshal(resp.Body, &f)
 
 	/*fake := []byte(`{"id":"psmfffm3","name":"Tom Terraform Test 4","os":null,"ram":null,
 	  "cpus":1,"gpu":null,"storageTotal":null,"storageUsed":null,"usageRate":"C1 Hourly",
@@ -132,11 +132,11 @@ func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace machine: Response: %s", resp.Body())
+		return fmt.Errorf("Error reading paperspace machine: Response: %s", resp.Body)
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body(), &f)
+	err = json.Unmarshal(resp.Body, &f)
 
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling paperspace machine read response: %s", err)
@@ -204,7 +204,7 @@ func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] paperspace resourceMachineDelete StatusCode: %v", statusCode)
 	LogResponse("paperspace resourceMachineDelete", resp, err)
 	if statusCode != 204 && statusCode != 404 {
-		return fmt.Errorf("Error deleting paperspace machine: Response: %s", resp.Body())
+		return fmt.Errorf("Error deleting paperspace machine: Response: %s", resp.Body)
 	}
 	if statusCode == 204 {
 		log.Printf("[INFO] paperspace resourceMachineDelete machine deleted successfully, StatusCode: %v", statusCode)

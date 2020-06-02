@@ -88,5 +88,5 @@ func LogResponse(reqDesc string, resp *resty.Response, err error) {
 	log.Printf("Response Status: %v", resp.Status())
 	log.Printf("Response Time: %v", resp.Time())
 	log.Printf("Response Recevied At: %v", resp.ReceivedAt())
-	log.Printf("Response Body: %v", resp) // or resp.String() or string(resp.Body())
+	log.Printf("Response Body: %v", resp) // or resp.String() or string(resp.Body)
 }
