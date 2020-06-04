@@ -86,11 +86,11 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace network: networks not found")
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace network: Response: %s", resp.Body)
+		return fmt.Errorf("Error reading paperspace network: Response: %s", resp.Body())
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body, &f)
+	err = json.Unmarshal(resp.Body(), &f)
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling paperspace network read response: %s", err)
 	}

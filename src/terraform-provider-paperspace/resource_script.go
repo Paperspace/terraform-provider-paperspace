@@ -43,11 +43,11 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] paperspace resourceScriptCreate StatusCode: %v", statusCode)
 	LogResponse("paperspace resourceScriptCreate", resp, err)
 	if statusCode != 200 {
-		return fmt.Errorf("Error creating paperspace script: Response: %s", resp.Body)
+		return fmt.Errorf("Error creating paperspace script: Response: %s", resp.Body())
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body, &f)
+	err = json.Unmarshal(resp.Body(), &f)
 
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling paperspace script create response: %s", err)
@@ -96,11 +96,11 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace script: Response: %s", resp.Body)
+		return fmt.Errorf("Error reading paperspace script: Response: %s", resp.Body())
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body, &f)
+	err = json.Unmarshal(resp.Body(), &f)
 
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling paperspace script read response: %s", err)
@@ -142,10 +142,10 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 		return nil
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace script text: Response: %s", resp.Body)
+		return fmt.Errorf("Error reading paperspace script text: Response: %s", resp.Body())
 	}
 
-	d.Set("script_text", resp.Body)
+	d.Set("script_text", resp.Body())
 
 	return nil
 }
@@ -173,7 +173,7 @@ func resourceScriptDelete(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] paperspace resourceScriptDelete StatusCode: %v", statusCode)
 	LogResponse("paperspace resourceScriptDelete", resp, err)
 	if statusCode != 204 && statusCode != 404 {
-		return fmt.Errorf("Error deleting paperspace script: Response: %s", resp.Body)
+		return fmt.Errorf("Error deleting paperspace script: Response: %s", resp.Body())
 	}
 	if statusCode == 204 {
 		log.Printf("[INFO] paperspace resourceScriptDelete script deleted successfully, StatusCode: %v", statusCode)

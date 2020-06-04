@@ -94,11 +94,11 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace template: templates not found")
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace template: Response: %s", resp.Body)
+		return fmt.Errorf("Error reading paperspace template: Response: %s", resp.Body())
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body, &f)
+	err = json.Unmarshal(resp.Body(), &f)
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling paperspace template read response: %s", err)
 	}

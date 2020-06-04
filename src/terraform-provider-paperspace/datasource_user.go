@@ -78,11 +78,11 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace user: users not found")
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace user: Response: %s", resp.Body)
+		return fmt.Errorf("Error reading paperspace user: Response: %s", resp.Body())
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body, &f)
+	err = json.Unmarshal(resp.Body(), &f)
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling paperspace user read response: %s", err)
 	}
