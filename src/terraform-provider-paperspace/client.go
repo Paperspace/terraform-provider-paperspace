@@ -4,8 +4,8 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/go-resty/resty"
 	"github.com/hashicorp/terraform/helper/schema"
-	"gopkg.in/resty.v0"
 )
 
 type MapIf map[string]interface{}
