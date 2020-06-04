@@ -72,7 +72,7 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(id)
 
-	return nil
+	return resourceScriptRead(d, m)
 }
 
 func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
@@ -154,7 +154,7 @@ func resourceScriptUpdate(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] paperspace resourceScriptUpdate Client ready")
 
-	return nil
+	return resourceScriptRead(d, m)
 }
 
 func resourceScriptDelete(d *schema.ResourceData, m interface{}) error {

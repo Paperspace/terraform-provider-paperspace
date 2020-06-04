@@ -109,7 +109,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId(id)
 
-	return nil
+	return resourceMachineRead(d, m)
 }
 
 func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
@@ -186,7 +186,7 @@ func resourceMachineUpdate(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] paperspace resourceMachineUpdate Client ready")
 
-	return nil
+	return resourceMachineRead(d, m)
 }
 
 func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
