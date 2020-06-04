@@ -72,12 +72,13 @@ cd terraform-provider-paperspace
 cd src/terraform-provider-paperspace
 ```
 
-4) Change to the `src/terraform-provider-paperspace` subdirectory
-```
-cd src/terraform-provider-paperspace
-```
+4) Build the Paperspace terraform provider
 
-5) Build the Paperspace terraform provider
+On Mac run:
+```
+go mod tidy
+go build ./...
+```
 
 On Linux x64 run:
 ```
@@ -86,7 +87,7 @@ make
 
 On Windows run:
 ```
-go get
+go mod tidy
 go build
 ```
 
