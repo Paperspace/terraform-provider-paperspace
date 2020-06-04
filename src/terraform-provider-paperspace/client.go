@@ -70,7 +70,8 @@ func (c *Config) Client() (PaperspaceClient, error) {
 	restyClient.
 		SetHostURL(c.ApiHost).
 		SetHeader("x-api-key", c.ApiKey).
-		SetHeader("Accept", "application/json")
+		SetHeader("Accept", "application/json").
+		SetHeader("ps_client_name", "terraform-provider-paperspace")
 
 	client := PaperspaceClient{
 		ApiKey:      c.ApiKey,
