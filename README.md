@@ -1,4 +1,4 @@
-# paperspace-terraform
+# terraform-provider-paperspace
 Paperspace terraform provider
 
 ## Release Notes
