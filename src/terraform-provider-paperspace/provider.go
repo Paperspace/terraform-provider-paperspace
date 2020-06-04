@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"os"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func Provider() *schema.Provider {

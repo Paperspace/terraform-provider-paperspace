@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/go-resty/resty"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 type MapIf map[string]interface{}
