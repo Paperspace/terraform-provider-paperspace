@@ -63,13 +63,13 @@ Note: this version of the provider has been successfully compiled with go versio
 
 2) Clone this repository and change to the project directory
 ```
-git clone https://github.com/Paperspace/paperspace-terraform.git
-cd paperspace-terraform
+git clone https://github.com/Paperspace/terraform-provider-paperspace.git
+cd terraform-provider-paperspace
 ```
 
-3) Set your GOPATH environment variable to the the root of the project, e.g., on Linux:
+3) Change to the `src/terraform-provider-paperspace` subdirectory
 ```
-export GOPATH=~/paperspace-terraform
+cd src/terraform-provider-paperspace
 ```
 
 4) Change to the `src/terraform-provider-paperspace` subdirectory
