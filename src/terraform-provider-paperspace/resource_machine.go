@@ -43,6 +43,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	log.Println(string(data))
 
 	resp, err := client.R().
+		EnableTrace().
 		SetBody(body).
 		Post("/machines/createSingleMachinePublic")
 
