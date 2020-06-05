@@ -67,6 +67,53 @@ func (c *Config) Client() (PaperspaceClient, error) {
 
 	restyClient := resty.New()
 
+	restyClient.SetDebug(true)
+
+	restyClient.OnBeforeRequest(func(c *resty.Client, req *resty.Request) error {
+		// Explore request object
+		log.Println("Request Info:")
+		log.Println("client.HostURL", c.HostURL)
+		log.Println("client.Header", c.Header)
+		log.Println("req.Method", req.Method)
+		log.Println("req.URL", req.URL)
+		log.Println("req.Body", req.Body)
+		log.Println("req.AuthScheme", req.AuthScheme)
+		log.Println("req.RawRequest", req.RawRequest)
+		log.Println("req.Error", req.Error)
+
+		return nil
+	})
+
+	restyClient.OnAfterResponse(func(c *resty.Client, resp *resty.Response) error {
+
+		// Explore response object
+		log.Println("Response Info:")
+		// log.Println("Error      :", err)
+		log.Println("Status Code:", resp.StatusCode())
+		log.Println("Status     :", resp.Status())
+		log.Println("Proto      :", resp.Proto())
+		log.Println("Time       :", resp.Time())
+		log.Println("Received At:", resp.ReceivedAt())
+		log.Println("Body       :\n", resp)
+		log.Println()
+
+		// Explore trace info
+		log.Println("Request Trace Info:")
+		ti := resp.Request.TraceInfo()
+		log.Println("DNSLookup    :", ti.DNSLookup)
+		log.Println("ConnTime     :", ti.ConnTime)
+		log.Println("TCPConnTime  :", ti.TCPConnTime)
+		log.Println("TLSHandshake :", ti.TLSHandshake)
+		log.Println("ServerTime   :", ti.ServerTime)
+		log.Println("ResponseTime :", ti.ResponseTime)
+		log.Println("TotalTime    :", ti.TotalTime)
+		log.Println("IsConnReused :", ti.IsConnReused)
+		log.Println("IsConnWasIdle:", ti.IsConnWasIdle)
+		log.Println("ConnIdleTime :", ti.ConnIdleTime)
+
+		return nil
+	})
+
 	restyClient.
 		SetHostURL(c.ApiHost).
 		SetHeader("x-api-key", c.ApiKey).
