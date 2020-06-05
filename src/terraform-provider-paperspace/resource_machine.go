@@ -31,6 +31,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	body.AppendAsIfSet(d, "assign_public_ip", "assignPublicIp")
 	body.AppendAsIfSet(d, "user_id", "userId")
 	body.AppendAsIfSet(d, "team_id", "teamId")
+	body.AppendAsIfSet(d, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
 
 	// unverified
 	body.AppendAsIfSet(d, "network_id", "networkId")
@@ -332,7 +333,7 @@ func resourceMachine() *schema.Resource {
 				Computed: true,
 			},
 			"shutdown_timeout_in_hours": &schema.Schema{
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"shutdown_timeout_forces": &schema.Schema{
