@@ -118,6 +118,8 @@ func (c *Config) Client() (PaperspaceClient, error) {
 		SetHostURL(c.ApiHost).
 		SetHeader("x-api-key", c.ApiKey).
 		SetHeader("Accept", "application/json").
+		SetHeader("Content-Type", "application/json").
+		SetHeader("User-Agent", "terraform-provider-paperspace").
 		SetHeader("ps_client_name", "terraform-provider-paperspace")
 
 	client := PaperspaceClient{
