@@ -1,6 +1,6 @@
 provider "paperspace" {
   region = "East Coast (NY2)"
-  api_key = "12345678..."
+  api_key = "1be4f97..." // modify this to use your actual api key
 }
 
 data "paperspace_template" "my-template-1" {
@@ -8,7 +8,7 @@ data "paperspace_template" "my-template-1" {
 }
 
 data "paperspace_user" "my-user-1" {
-  email = "user@email.com"
+  email = "me@mycompany.com" // change to the email address of a user on your paperspace team
   team_id = "te1234567"
 }
 
