@@ -88,37 +88,26 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 
 	retries := 0
 	ready := false
-
-	log.Printf("[INFO] *** BEGIN RETRY! ***")
 	for ready == false {
-		log.Printf("[INFO] *** /getMachinePublic?machineId=%s ***", id)
 		time.Sleep(5 * time.Second)
 
-		resp, err = client.R().
+		if resp, err = client.R().
 			EnableTrace().
-			Get("/machines/getMachinePublic?machineId=" + id)
-
-		if err != nil {
+			Get("/machines/getMachinePublic?machineId=" + id); err != nil {
 			return fmt.Errorf("Error getting paperspace machine: %s", err)
 		}
 
 		data := make(map[string]interface{})
 		err := json.Unmarshal(resp.Body(), &data)
 		if err != nil {
-			return fmt.Errorf("Error getting paperspace machine: %s", err)
+			return fmt.Errorf("Error unmarshaling machine response body: %s", err)
 		}
-		state, _ := data["state"].(string)
-
-		log.Printf("*** state %s", state)
-
-		if state == "ready" {
+		if state, _ := data["state"].(string); state == "ready" {
 			ready = true
 			break
 		}
 
 		retries++
-		log.Printf("*** retries %d", retries)
-
 		if retries == 60 {
 			return fmt.Errorf("[INFO] Machine %v did not successfully provision after 5 minutes", id)
 		}
