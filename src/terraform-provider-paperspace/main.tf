@@ -1,14 +1,15 @@
 provider "paperspace" {
-  api_key = "1be4f97..." // modify this to use your actual api key
   region = "East Coast (NY2)"
+  api_key = "1be4f97..." // modify this to use your actual api key
+}
+
+data "paperspace_template" "my-template-1" {
+  label = "Ubuntu 18.04 Server"
 }
 
 data "paperspace_user" "my-user-1" {
   email = "me@mycompany.com" // change to the email address of a user on your paperspace team
-}
-
-data "paperspace_template" "my-template-1" {
-  label = "Ubuntu 16.04 Server"
+  team_id = "te1234567"
 }
 
 resource "paperspace_script" "my-script-1" {
@@ -31,7 +32,8 @@ resource "paperspace_machine" "my-machine-1" {
   size = 50
   billing_type = "hourly"
   assign_public_ip = true // optional, remove if you don't want a public ip assigned
-  template_id = "${data.paperspace_template.my-template-1.id}"
-  user_id = "${data.paperspace_user.my-user-1.id}"  // optional, remove to default
-  script_id = "${paperspace_script.my-script-1.id}" // optional, remove for no script
+  template_id = data.paperspace_template.my-template-1.id
+  user_id = data.paperspace_user.my-user-1.id  // optional, remove to default
+  team_id = data.paperspace_user.my-user-1.team_id
+  script_id = paperspace_script.my-script-1.id // optional, remove for no script
 }

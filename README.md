@@ -1,4 +1,4 @@
-# paperspace-terraform
+# terraform-provider-paperspace
 Paperspace terraform provider
 
 ## Release Notes
@@ -9,16 +9,17 @@ Note: currently this provider is offered as a terraform 'private cloud' provider
 
 ## Downloads
 
-Linux x64 [terraform-provider-paperspace](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace)
+Darwin (macOS) x64 [terraform-provider-paperspace-darwin](https://ps-terraform.s3.amazonaws.com/darwin/terraform-provider-paperspace)¹
 
-Windows x64 [terraform-provider-paperspace.exe](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace.exe)
+Linux x64 [terraform-provider-paperspace](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace)¹
 
-Note: The these downloads were built with go 1.8.3 and tested with terraform 0.9.11
+Windows x64 [terraform-provider-paperspace.exe](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace.exe)²
+
+¹ Built with go 1.14 and tested with terraform 0.12.26
+² Built with go 1.8.3 and tested with terraform 0.9.11
 
 ## Installation and Testing
 1) Install [terraform](https://www.terraform.io/downloads.html) and make sure it is in your path.
-
-Note: this release of the Paperspace provider was tested with terraform 0.9.11
 
 2) Download the Paperspace terraform provider from one of the links above, or build it from source as described below.
 
@@ -62,21 +63,22 @@ Note: this version of the provider has been successfully compiled with go versio
 
 2) Clone this repository and change to the project directory
 ```
-git clone https://github.com/Paperspace/paperspace-terraform.git
-cd paperspace-terraform
+git clone https://github.com/Paperspace/terraform-provider-paperspace.git
+cd terraform-provider-paperspace
 ```
 
-3) Set your GOPATH environment variable to the the root of the project, e.g., on Linux:
-```
-export GOPATH=~/paperspace-terraform
-```
-
-4) Change to the `src/terraform-provider-paperspace` subdirectory
+3) Change to the `src/terraform-provider-paperspace` subdirectory
 ```
 cd src/terraform-provider-paperspace
 ```
 
-5) Build the Paperspace terraform provider
+4) Build the Paperspace terraform provider
+
+On Mac run:
+```
+go mod tidy
+go build ./...
+```
 
 On Linux x64 run:
 ```
@@ -85,7 +87,7 @@ make
 
 On Windows run:
 ```
-go get
+go mod tidy
 go build
 ```
 
