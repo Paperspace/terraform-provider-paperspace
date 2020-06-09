@@ -33,7 +33,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	body.AppendAsIfSet(d, "team_id", "teamId")
 	body.AppendAsIfSet(d, "script_id", "scriptId")
 
-	// unverified
+	// fields not tested when this project was picked back up for https://github.com/Paperspace/terraform-provider-paperspace/pull/3
 	body.AppendAsIfSet(d, "network_id", "networkId")
 	body.AppendIfSet(d, "email")
 	body.AppendIfSet(d, "password")
