@@ -15,7 +15,7 @@ Linux x64 [terraform-provider-paperspace](https://s3.amazonaws.com/ps-terraform/
 
 Windows x64 [terraform-provider-paperspace.exe](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace.exe)²
 
-¹ Build with go 1.14 and tested with terraform 0.12.26
+¹ Built with go 1.14 and tested with terraform 0.12.26
 ² Built with go 1.8.3 and tested with terraform 0.9.11
 
 ## Installation and Testing
