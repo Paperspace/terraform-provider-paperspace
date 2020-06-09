@@ -31,7 +31,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	body.AppendAsIfSet(d, "assign_public_ip", "assignPublicIp")
 	body.AppendAsIfSet(d, "user_id", "userId")
 	body.AppendAsIfSet(d, "team_id", "teamId")
-	body.AppendAsIfSet(d, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
+	// body.AppendAsIfSet(d, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
 	body.AppendAsIfSet(d, "script_id", "scriptId")
 
 	// unverified
