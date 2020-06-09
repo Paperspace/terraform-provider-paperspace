@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -84,6 +85,44 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	log.Printf("[INFO] paperspace resourceMachineCreate returned id: %v", id)
+
+	retries := 0
+	ready := false
+
+	log.Printf("[INFO] *** BEGIN RETRY! ***")
+	for ready == false {
+		log.Printf("[INFO] *** /getMachinePublic?machineId=%s ***", id)
+		time.Sleep(5 * time.Second)
+
+		resp, err = client.R().
+			EnableTrace().
+			Get("/machines/getMachinePublic?machineId=" + id)
+
+		if err != nil {
+			return fmt.Errorf("Error getting paperspace machine: %s", err)
+		}
+
+		data := make(map[string]interface{})
+		err := json.Unmarshal(resp.Body(), &data)
+		if err != nil {
+			return fmt.Errorf("Error getting paperspace machine: %s", err)
+		}
+		state, _ := data["state"].(string)
+
+		log.Printf("*** state %s", state)
+
+		if state == "ready" {
+			ready = true
+			break
+		}
+
+		retries++
+		log.Printf("*** retries %d", retries)
+
+		if retries == 60 {
+			return fmt.Errorf("[INFO] Machine %v did not successfully provision after 5 minutes", id)
+		}
+	}
 
 	SetResData(d, mp, "name")
 	SetResData(d, mp, "os")
