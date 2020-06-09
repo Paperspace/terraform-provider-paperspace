@@ -35,6 +35,5 @@ resource "paperspace_machine" "my-machine-1" {
   template_id = data.paperspace_template.my-template-1.id
   user_id = data.paperspace_user.my-user-1.id  // optional, remove to default
   team_id = data.paperspace_user.my-user-1.team_id
-  # shutdown_timeout_in_hours = 0
   script_id = paperspace_script.my-script-1.id // optional, remove for no script
 }
