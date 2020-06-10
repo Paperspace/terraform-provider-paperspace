@@ -5,11 +5,12 @@ Note: currently this provider is offered as a terraform 'private cloud' provider
 
 ## Downloads
 
-Darwin x64 (macOS) [terraform-provider-paperspace](https://ps-terraform.s3.amazonaws.com/darwin/terraform-provider-paperspace)¹
-
 Linux x64 [terraform-provider-paperspace](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace)¹
 
 Windows x64 [terraform-provider-paperspace.exe](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace.exe)²
+
+Darwin x64 (macOS) [terraform-provider-paperspace](https://ps-terraform.s3.amazonaws.com/darwin/terraform-provider-paperspace)¹
+
 
 ¹ v0.1.3, built with go 1.14 and tested with terraform 0.12.26
 ² v0.1.2, built with go 1.8.3 and tested with terraform 0.9.11
@@ -69,22 +70,19 @@ cd src/terraform-provider-paperspace
 ```
 
 4) Build the Paperspace terraform provider
-
-On Mac run:
+On any platform:
 ```
-go mod tidy
-go build ./...
+make build
 ```
 
-On Linux x64 run:
+For Linux x64:
 ```
-make
+make build-linux
 ```
 
-On Windows run:
+For Darwin x64 (macOS):
 ```
-go mod tidy
-go build
+make build-darwin
 ```
 
 The output of the build  is a `terraform-provider-paperspace` executable.
