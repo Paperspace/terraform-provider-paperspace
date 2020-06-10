@@ -9,7 +9,7 @@ Note: currently this provider is offered as a terraform 'private cloud' provider
 
 ## Downloads
 
-Darwin (macOS) x64 [terraform-provider-paperspace-darwin](https://ps-terraform.s3.amazonaws.com/darwin/terraform-provider-paperspace)¹
+Darwin x64 (macOS) [terraform-provider-paperspace](https://ps-terraform.s3.amazonaws.com/darwin/terraform-provider-paperspace)¹
 
 Linux x64 [terraform-provider-paperspace](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace)¹
 
