@@ -87,9 +87,11 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] paperspace resourceMachineCreate returned id: %v", id)
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		if resp, err = client.R().
+		resp, err = client.R().
 			EnableTrace().
-			Get("/machines/getMachinePublic?machineId=" + id); err != nil {
+			Get("/machines/getMachinePublic?machineId=" + id)
+
+		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine: %s", err))
 		}
 
@@ -100,7 +102,6 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 		}
 
 		state, _ := mp["state"].(string)
-
 		if state != "ready" {
 			return resource.RetryableError(fmt.Errorf("Expected machine to be ready but was in state %s", state))
 		}
@@ -228,17 +229,45 @@ func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
 	statusCode := resp.StatusCode()
 	log.Printf("[INFO] paperspace resourceMachineDelete StatusCode: %v", statusCode)
 	LogResponse("paperspace resourceMachineDelete", resp, err)
-	if statusCode != 204 && statusCode != 404 {
+
+	if statusCode != 204 {
 		return fmt.Errorf("Error deleting paperspace machine: Response: %s", resp.Body())
 	}
-	if statusCode == 204 {
-		log.Printf("[INFO] paperspace resourceMachineDelete machine deleted successfully, StatusCode: %v", statusCode)
-	}
-	if statusCode == 404 {
-		log.Printf("[INFO] paperspace resourceMachineDelete machine already deleted, StatusCode: %v", statusCode)
-	}
 
-	return nil
+	log.Printf("[INFO] paperspace resourceMachineDelete machine successfully started deleting, StatusCode: %v", statusCode)
+
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		resp, err = client.R().
+			EnableTrace().
+			Get("/machines/getMachinePublic?machineId=" + d.Id())
+
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine: %s", err))
+		}
+
+		statusCode := resp.StatusCode()
+		log.Printf("[INFO] paperspace resourceMachineDelete StatusCode: %v", statusCode)
+		LogResponse("paperspace resourceMachineDelete", resp, err)
+
+		if statusCode != 200 && statusCode != 404 {
+			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine, Status Code %s", err))
+		}
+
+		if statusCode == 200 {
+			mp := make(map[string]interface{})
+			err := json.Unmarshal(resp.Body(), &mp)
+			if err != nil {
+				return resource.NonRetryableError(fmt.Errorf("Error unmarshalling machine response body: %s", err))
+			}
+
+			state, _ := mp["state"].(string)
+			return resource.RetryableError(fmt.Errorf("Expected machine to be deleted but was in state %s", state))
+		}
+
+		// statusCode == 404
+		log.Printf("[INFO] paperspace resourceMachineDelete machine successfully deleted, StatusCode: %v", statusCode)
+		return resource.NonRetryableError(nil)
+	})
 }
 
 func resourceMachine() *schema.Resource {
