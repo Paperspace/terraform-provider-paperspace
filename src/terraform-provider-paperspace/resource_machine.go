@@ -96,7 +96,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 		mp := make(map[string]interface{})
 		err := json.Unmarshal(resp.Body(), &mp)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error unmarshaling machine response body: %s", err))
+			return resource.NonRetryableError(fmt.Errorf("Error unmarshalling machine response body: %s", err))
 		}
 
 		state, _ := mp["state"].(string)
