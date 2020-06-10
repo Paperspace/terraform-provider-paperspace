@@ -56,8 +56,6 @@ terraform show
 
 1) Install the latest version of [go](https://golang.org/dl/)
 
-Note: this version of the provider has been successfully compiled with go version 1.8.3
-
 2) Clone this repository and change to the project directory
 ```
 git clone https://github.com/Paperspace/terraform-provider-paperspace.git
