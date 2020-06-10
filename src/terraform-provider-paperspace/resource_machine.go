@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -86,61 +86,54 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] paperspace resourceMachineCreate returned id: %v", id)
 
-	retries := 0
-	ready := false
-	for ready == false {
-		time.Sleep(5 * time.Second)
-
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		if resp, err = client.R().
 			EnableTrace().
 			Get("/machines/getMachinePublic?machineId=" + id); err != nil {
-			return fmt.Errorf("Error getting paperspace machine: %s", err)
+			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine: %s", err))
 		}
 
-		data := make(map[string]interface{})
-		err := json.Unmarshal(resp.Body(), &data)
+		mp := make(map[string]interface{})
+		err := json.Unmarshal(resp.Body(), &mp)
 		if err != nil {
-			return fmt.Errorf("Error unmarshaling machine response body: %s", err)
-		}
-		if state, _ := data["state"].(string); state == "ready" {
-			ready = true
-			break
+			return resource.NonRetryableError(fmt.Errorf("Error unmarshaling machine response body: %s", err))
 		}
 
-		retries++
-		if retries == 60 {
-			return fmt.Errorf("[INFO] Machine %v did not successfully provision after 5 minutes", id)
+		state, _ := mp["state"].(string)
+
+		if state != "ready" {
+			return resource.RetryableError(fmt.Errorf("Expected machine to be ready but was in state %s", state))
 		}
-	}
 
-	SetResData(d, mp, "name")
-	SetResData(d, mp, "os")
-	SetResData(d, mp, "ram")
-	SetResData(d, mp, "cpus")
-	SetResData(d, mp, "gpu")
-	SetResDataFrom(d, mp, "storage_total", "storageTotal")
-	SetResDataFrom(d, mp, "storage_used", "storageUsed")
-	SetResDataFrom(d, mp, "usage_rate", "usageRate")
-	SetResDataFrom(d, mp, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
-	SetResDataFrom(d, mp, "shutdown_timeout_forces", "shutdownTimeoutForces")
-	SetResDataFrom(d, mp, "perform_auto_snapshot", "performAutoSnapshot")
-	SetResDataFrom(d, mp, "auto_snapshot_frequency", "autoSnapshotFrequency")
-	SetResDataFrom(d, mp, "auto_snapshot_save_count", "autoSnapshotSaveCount")
-	SetResDataFrom(d, mp, "agent_type", "agentType")
-	SetResDataFrom(d, mp, "dt_created", "dtCreated")
-	SetResData(d, mp, "state")
-	SetResDataFrom(d, mp, "network_id", "networkId") //overlays with null initially
-	SetResDataFrom(d, mp, "private_ip_address", "privateIpAddress")
-	SetResDataFrom(d, mp, "public_ip_address", "publicIpAddress")
-	SetResData(d, mp, "region") //overlays with null initially
-	SetResDataFrom(d, mp, "user_id", "userId")
-	SetResDataFrom(d, mp, "team_id", "teamId")
-	SetResDataFrom(d, mp, "script_id", "scriptId")
-	SetResDataFrom(d, mp, "dt_last_run", "dtLastRun")
+		SetResData(d, mp, "name")
+		SetResData(d, mp, "os")
+		SetResData(d, mp, "ram")
+		SetResData(d, mp, "cpus")
+		SetResData(d, mp, "gpu")
+		SetResDataFrom(d, mp, "storage_total", "storageTotal")
+		SetResDataFrom(d, mp, "storage_used", "storageUsed")
+		SetResDataFrom(d, mp, "usage_rate", "usageRate")
+		SetResDataFrom(d, mp, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
+		SetResDataFrom(d, mp, "shutdown_timeout_forces", "shutdownTimeoutForces")
+		SetResDataFrom(d, mp, "perform_auto_snapshot", "performAutoSnapshot")
+		SetResDataFrom(d, mp, "auto_snapshot_frequency", "autoSnapshotFrequency")
+		SetResDataFrom(d, mp, "auto_snapshot_save_count", "autoSnapshotSaveCount")
+		SetResDataFrom(d, mp, "agent_type", "agentType")
+		SetResDataFrom(d, mp, "dt_created", "dtCreated")
+		SetResData(d, mp, "state")
+		SetResDataFrom(d, mp, "network_id", "networkId") //overlays with null initially
+		SetResDataFrom(d, mp, "private_ip_address", "privateIpAddress")
+		SetResDataFrom(d, mp, "public_ip_address", "publicIpAddress")
+		SetResData(d, mp, "region") //overlays with null initially
+		SetResDataFrom(d, mp, "user_id", "userId")
+		SetResDataFrom(d, mp, "team_id", "teamId")
+		SetResDataFrom(d, mp, "script_id", "scriptId")
+		SetResDataFrom(d, mp, "dt_last_run", "dtLastRun")
 
-	d.SetId(id)
+		d.SetId(id)
 
-	return resourceMachineRead(d, m)
+		return resource.NonRetryableError(resourceMachineRead(d, m))
+	})
 }
 
 func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
