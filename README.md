@@ -5,9 +5,9 @@ Note: currently this provider is offered as a terraform 'private cloud' provider
 
 ## Downloads
 
-Linux x64 [terraform-provider-paperspace](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace)¹
+Linux x64 [terraform-provider-paperspace](https://ps-terraform.s3.amazonaws.com/terraform-provider-paperspace)¹
 
-Windows x64 [terraform-provider-paperspace.exe](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace.exe)²
+Windows x64 [terraform-provider-paperspace.exe](https://ps-terraform.s3.amazonaws.com/terraform-provider-paperspace.exe)²
 
 Darwin x64 (macOS) [terraform-provider-paperspace](https://ps-terraform.s3.amazonaws.com/darwin/terraform-provider-paperspace)¹
 
