@@ -1,10 +1,6 @@
 # terraform-provider-paperspace
 Paperspace terraform provider
 
-## Release Notes
-
-v0.1.2 -- first release; supports machine and script resources for create/read/destroy/import, and data sources for networks, templates, and users.
-
 Note: currently this provider is offered as a terraform 'private cloud' provider while under early development.  We are moving toward contributing it back to the terraform open source project, which will remove the need for a separate download and installation step in the future.
 
 ## Downloads
@@ -15,8 +11,8 @@ Linux x64 [terraform-provider-paperspace](https://s3.amazonaws.com/ps-terraform/
 
 Windows x64 [terraform-provider-paperspace.exe](https://s3.amazonaws.com/ps-terraform/terraform-provider-paperspace.exe)²
 
-¹ Built with go 1.14 and tested with terraform 0.12.26
-² Built with go 1.8.3 and tested with terraform 0.9.11
+¹ v0.1.3, built with go 1.14 and tested with terraform 0.12.26
+² v0.1.2, built with go 1.8.3 and tested with terraform 0.9.11
 
 ## Installation and Testing
 1) Install [terraform](https://www.terraform.io/downloads.html) and make sure it is in your path.
