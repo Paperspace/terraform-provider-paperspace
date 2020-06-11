@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -87,21 +89,40 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] paperspace resourceMachineCreate returned id: %v", id)
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		resp, err = client.R().
-			EnableTrace().
-			Get("/machines/getMachinePublic?machineId=" + id)
+		timeout := 10 * time.Second
+		retryClient := &http.Client{
+			Timeout: timeout,
+		}
+		url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", m.(PaperspaceClient).ApiHost, id)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("[WARNING] Constructing resourceMachineCreate get machine request failed: %s", err))
+		}
+		req.Header.Set("x-api-key", m.(PaperspaceClient).ApiKey)
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("User-Agent", "terraform-provider-paperspace")
+		req.Header.Set("ps_client_name", "terraform-provider-paperspace")
 
+		resp, err := retryClient.Do(req)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine: %s", err))
 		}
+		log.Printf("[DEBUG] paperspace resourceMachineCreate get machine response StatusCode: %v", resp.StatusCode)
+		defer resp.Body.Close()
 
 		mp := make(map[string]interface{})
-		err := json.Unmarshal(resp.Body(), &mp)
+		err = json.NewDecoder(resp.Body).Decode(&mp)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error unmarshalling machine response body: %s", err))
+			return resource.NonRetryableError(fmt.Errorf("Error decoding resourceMachineCreate get machine response body: %s", err))
 		}
+		log.Printf("[DEBUG] paperspace resourceMachineCreate get machine response: %v", mp)
 
-		state, _ := mp["state"].(string)
+		state, ok := mp["state"].(string)
+		if !ok {
+			log.Printf("[WARNING] 'state' not found on resourceMachineCreate get machine response body")
+			return resource.RetryableError(fmt.Errorf("Expected machine to be ready but found no state"))
+		}
 		if state != "ready" {
 			return resource.RetryableError(fmt.Errorf("Expected machine to be ready but was in state %s", state))
 		}
@@ -421,6 +442,10 @@ func resourceMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 	}
 }
