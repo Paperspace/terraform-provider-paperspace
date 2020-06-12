@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"reflect"
 	"time"
 
@@ -118,11 +119,12 @@ func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 // LogResponse logs http response fields
-func LogResponse(reqDesc string, resp *http.Response, err error) {
+func LogResponse(reqDesc string, reqURL *url.URL, resp *http.Response, err error) {
 	log.Printf("[INFO] Request: %v", reqDesc)
-	log.Printf("[INFO] Error: %v", err)
+	log.Printf("[INFO] Request URL: %v", reqURL)
 	log.Printf("[INFO] Response Status: %v", resp.Status)
 	log.Printf("[INFO] Response Body: %v", resp) // or resp.String() or string(resp.Body())
+	log.Printf("[INFO] Error: %v", err)
 }
 
 func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{}, err error) {
@@ -130,13 +132,12 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 	log.Printf("[INFO] paperspace GetMachine, url: %s", url)
 
 	req, err := http.NewRequest("GET", url, nil)
-
 	if err != nil {
 		return nil, fmt.Errorf("Error constructing GetMachine request: %s", err)
 	}
 
 	resp, err := psc.HttpClient.Do(req)
-	LogResponse("GetMachine", resp, err)
+	LogResponse("GetMachine", req.URL, resp, err)
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -167,7 +168,7 @@ func (psc *PaperspaceClient) CreateMachine(data []byte) (id *string, err error) 
 	}
 
 	resp, err := psc.HttpClient.Do(req)
-	LogResponse("CreateMachine", resp, err)
+	LogResponse("CreateMachine", req.URL, resp, err)
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -201,7 +202,7 @@ func (psc *PaperspaceClient) DeleteMachine(id string) (err error) {
 	}
 
 	resp, err := psc.HttpClient.Do(req)
-	LogResponse("DeleteMachine", resp, err)
+	LogResponse("DeleteMachine", req.URL, resp, err)
 	defer resp.Body.Close()
 
 	if err != nil {
