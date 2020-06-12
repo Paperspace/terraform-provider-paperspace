@@ -196,8 +196,29 @@ func (psc *PaperspaceClient) CreateMachine(data []byte) (id *string, err error) 
 		return nil, fmt.Errorf("Error on CreateMachine: id not found")
 	}
 
-	log.Printf("[INFO] Success on CreateMachine: machine id: %v", id)
-
 	LogResponse("CreateMachine", resp, err)
 	return id, nil
+}
+
+func (psc *PaperspaceClient) DeleteMachine(id string) (err error) {
+	url := fmt.Sprintf("%s/machines/%s/destroyMachine", psc.APIHost, id)
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return fmt.Errorf("Error constructing DeleteMachine request: %s", err)
+	}
+
+	resp, err := psc.HttpClient.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		LogResponse("DeleteMachine", resp, err)
+		return fmt.Errorf("Error sending DeleteMachine request: %s", err)
+	}
+
+	if resp.StatusCode != 204 {
+		LogResponse("DeleteMachine", resp, err)
+		return fmt.Errorf("Error deleting machine: Response: %s", resp.Body)
+	}
+
+	LogResponse("DeleteMachine", resp, err)
+	return nil
 }

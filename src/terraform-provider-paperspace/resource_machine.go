@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -51,7 +50,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		body, _, err := psc.GetMachine(*id)
+		body, err := psc.GetMachine(*id)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -98,29 +97,12 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
 	psc := m.(PaperspaceClient)
 
-	body, statusCode, err := psc.GetMachine(d.Id())
+	_, err := psc.GetMachine(d.Id())
 	if err != nil {
 		return err
 	}
 
-	if *statusCode == 404 {
-		log.Printf("[INFO] paperspace resourceMachineRead machineId not found; removing resource %s", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if *statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace machine: Response: %s", body)
-	}
-
-	id, _ := body["id"].(string)
-
-	if id == "" {
-		log.Printf("[WARNING] paperspace resourceMachineRead machine id not found; removing resource %s", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	log.Printf("[INFO] paperspace resourceMachineRead returned id: %v", id)
+	d.SetId("")
 
 	mp := make(map[string]interface{})
 	SetResData(d, mp, "name")
@@ -152,65 +134,30 @@ func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceMachineUpdate(d *schema.ResourceData, m interface{}) error {
-
-	log.Printf("[INFO] paperspace resourceMachineUpdate Client ready")
-
+	// TODO: needs to be implemented
 	return resourceMachineRead(d, m)
 }
 
 func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).HttpClient
+	psc := m.(PaperspaceClient)
 
-	log.Printf("[INFO] paperspace resourceMachineDelete Client ready")
-
-	url := fmt.Sprintf("/machines/%s/destroyMachine", d.Id())
-	req, err := http.NewRequest("DELETE", url, nil)
+	err := psc.DeleteMachine(d.Id())
 	if err != nil {
-		fmt.Errorf("[WARNING] Constructing resourceMachineCreate delete machine request failed: %s", err)
+		return err
 	}
-
-	resp, err := client.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		return fmt.Errorf("Error deleting paperspace machine: %s", err)
-	}
-
-	if resp.StatusCode != 204 {
-		return fmt.Errorf("Error deleting paperspace machine: Response: %s", resp.Body)
-	}
-
-	log.Printf("[INFO] paperspace resourceMachineDelete machine successfully started deleting, StatusCode: %v", resp.StatusCode)
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", m.(PaperspaceClient).APIHost, d.Id())
-		req, err := http.NewRequest("GET", url, nil)
+		body, err := psc.GetMachine(d.Id())
+
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("[WARNING] Constructing resourceMachineCreate get machine request failed: %s", err))
+			return resource.RetryableError(err)
 		}
 
-		resp, err := client.Do(req)
-		defer resp.Body.Close()
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine: %s", err))
-		}
-		log.Printf("[DEBUG] paperspace resourceMachineCreate get machine response StatusCode: %v", resp.StatusCode)
-
-		mp := make(map[string]interface{})
-		err = json.NewDecoder(resp.Body).Decode(&mp)
-
-		LogResponse("paperspace resourceMachineDelete", resp, err)
-
-		if resp.StatusCode != 200 && resp.StatusCode != 404 {
-			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine, Status Code %s", err))
-		}
-
-		if resp.StatusCode == 200 {
-			state, _ := mp["state"].(string)
-			return resource.RetryableError(fmt.Errorf("Expected machine to be deleted but was in state %s", state))
+		if body != nil {
+			return resource.RetryableError(fmt.Errorf("Expected machine to be deleted but still exists"))
 		}
 
 		// resp.StatusCode == 404
-		log.Printf("[INFO] paperspace resourceMachineDelete machine successfully deleted, StatusCode: %v", resp.StatusCode)
 		return resource.NonRetryableError(nil)
 	})
 }
