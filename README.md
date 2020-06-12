@@ -1,32 +1,25 @@
 # terraform-provider-paperspace
-This is an Terraform provider for Paperspace infrastructure.
+This is a Terraform provider for Paperspace infrastructure.
 
 It is offered currently as a Terraform 'private cloud' provider while under early development.  We are moving toward contributing it back to the terraform open source project, which will remove the need for a separate download and installation step in the future.
-
-
-## Releases
-Visit [Releases](https://github.com/Paperspace/terraform-provider-paperspace/releases) to download a pre-compiled binary for Linux, Windows, or Darwin. You can also [compile from source](#building-from-source).
 
 
 ## Installation and Testing
 1) Install [terraform](https://www.terraform.io/downloads.html) v0.12.26 and make sure it is in your path.
 
-2) Download the Paperspace terraform provider from one of the links above, or build it from source as described below.
+2) Download the Paperspace terraform provider from [Releases](https://github.com/Paperspace/terraform-provider-paperspace/releases) (Linux, Windows, or Darwin), or [build it from source](#building-from-source).
+
+3) Make terraform-provider-paperspace binary available as a plugin to your local Terraform by following the simple [Terraform plugin docs](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) – note: once you move it to your plugins directory, you may need to rename it to simply `terraform-provider-paperspace`
 
 3) Acquire a Paperspace API key for your account. See [Paperspace API](https://paperspace.github.io/paperspace-node/) for instructions on creating an api key.
 
-4) A sample terraform config file is provided in [src/terraform-provider-paperspace/main.tf](src/terraform-provider-paperspace/main.tf)
+4) Copy the sample Terraform config file at [src/terraform-provider-paperspace/main.tf](src/terraform-provider-paperspace/main.tf) into your project directory
 
-Modify this file to use your actual api_key, and valid user email address in the account associated with the api_key.
+Modify this file to use your actual API Key, valid user email address, and team id for the account associated with the API Key.
 
-5) cd to the directory where the sample configuration file is located, e.g.:
-```
-cd src/terraform-provider-paperspace
-```
+4b) Note: if you clone down this repo, you can build/download the binary as a sibling to [src/terraform-provider-paperspace/main.tf](src/terraform-provider-paperspace/main.tf), replace the values described in #4 above with yours, and follow #5 below to use the Paperspace Terraform provider directly from this directory
 
-6) Make sure the `terraform-provider-paperspace` executable is also in your path, or in the directory with the .tf config files you want to use.
-
-7) Run the following terraform commands interactively to exercise the configuration and examine the output:
+5) Run the following terraform commands interactively to exercise the configuration and examine the output:
 
 (Note the sample configuration will create a machine with a public ip; testing this configuration will result in charges for the machine and public ip resources in most cases.)
 
@@ -39,7 +32,7 @@ terraform show
 terraform plan
 ```
 
-8) When you are done with testing, run the following to destroy the configuration (and thus destroy the machine and script objects created above):
+6) When you are done with testing, run the following to destroy the configuration (and thus destroy the machine and script objects created above):
 ```
 terraform destroy
 terraform show
