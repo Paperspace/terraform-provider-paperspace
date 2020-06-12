@@ -130,36 +130,33 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 	log.Printf("[INFO] paperspace GetMachine, url: %s", url)
 
 	req, err := http.NewRequest("GET", url, nil)
+
 	if err != nil {
 		return nil, fmt.Errorf("Error constructing GetMachine request: %s", err)
 	}
 
 	resp, err := psc.HttpClient.Do(req)
 	defer resp.Body.Close()
+
+	LogResponse("GetMachine", resp, err)
+
 	if err != nil {
-		LogResponse("GetMachine", resp, err)
 		return nil, fmt.Errorf("Error sending GetMachine request: %s", err)
 	}
 
-	statusCode := resp.StatusCode
-
-	if statusCode != 404 && statusCode != 200 {
-		LogResponse("GetMachine", resp, err)
+	if resp.StatusCode != 404 && resp.StatusCode != 200 {
 		return nil, fmt.Errorf("Error reading paperspace machine: Response: %s", body)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
-		LogResponse("GetMachine", resp, err)
 		return nil, fmt.Errorf("Error decoding GetMachine response body: %s", err)
 	}
 
-	if statusCode == 404 {
-		LogResponse("GetMachine", resp, err)
+	if resp.StatusCode == 404 {
 		return nil, nil
 	}
 
-	LogResponse("GetMachine", resp, err)
 	return body, nil
 }
 
@@ -172,31 +169,29 @@ func (psc *PaperspaceClient) CreateMachine(data []byte) (id *string, err error) 
 
 	resp, err := psc.HttpClient.Do(req)
 	defer resp.Body.Close()
+
+	LogResponse("CreateMachine", resp, err)
+
 	if err != nil {
-		LogResponse("CreateMachine", resp, err)
 		return nil, fmt.Errorf("Error sending CreateMachine request: %s", err)
 	}
 
 	body := make(map[string]interface{})
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
-		LogResponse("CreateMachine", resp, err)
 		return nil, fmt.Errorf("Error decoding CreateMachine response body: %s", err)
 	}
 
 	if resp.StatusCode != 200 {
-		LogResponse("CreateMachine", resp, err)
 		return nil, fmt.Errorf("Error on CreateMachine: Response: %s", body)
 	}
 
 	id, _ = body["id"].(*string)
 
 	if *id == "" {
-		LogResponse("CreateMachine", resp, err)
 		return nil, fmt.Errorf("Error on CreateMachine: id not found")
 	}
 
-	LogResponse("CreateMachine", resp, err)
 	return id, nil
 }
 
@@ -209,16 +204,16 @@ func (psc *PaperspaceClient) DeleteMachine(id string) (err error) {
 
 	resp, err := psc.HttpClient.Do(req)
 	defer resp.Body.Close()
+
+	LogResponse("DeleteMachine", resp, err)
+
 	if err != nil {
-		LogResponse("DeleteMachine", resp, err)
 		return fmt.Errorf("Error sending DeleteMachine request: %s", err)
 	}
 
 	if resp.StatusCode != 204 {
-		LogResponse("DeleteMachine", resp, err)
 		return fmt.Errorf("Error deleting machine: Response: %s", resp.Body)
 	}
 
-	LogResponse("DeleteMachine", resp, err)
 	return nil
 }
