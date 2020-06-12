@@ -163,6 +163,11 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 
 	LogObjectResponse("GetMachine", req.URL, resp, body, err)
 
+	nextID, _ := body["id"].(string)
+	if nextID == "" {
+		return nil, fmt.Errorf("Error on GetMachine response: body missing id")
+	}
+
 	if resp.StatusCode == 404 {
 		return nil, nil
 	}

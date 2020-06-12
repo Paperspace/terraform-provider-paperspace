@@ -99,10 +99,9 @@ func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
 
 	_, err := psc.GetMachine(d.Id())
 	if err != nil {
+		d.SetId("")
 		return err
 	}
-
-	d.SetId("")
 
 	mp := make(map[string]interface{})
 	SetResData(d, mp, "name")
