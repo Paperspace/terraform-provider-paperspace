@@ -51,61 +51,45 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", m.(PaperspaceClient).APIHost, id)
-		req, err := http.NewRequest("GET", url, nil)
+		body, _, err := psc.GetMachine(*id)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("[WARNING] Constructing resourceMachineCreate get machine request failed: %s", err))
+			return resource.NonRetryableError(err)
 		}
 
-		resp, err := client.Do(req)
-		defer resp.Body.Close()
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine: %s", err))
-		}
-		log.Printf("[DEBUG] paperspace resourceMachineCreate get machine response StatusCode: %v", resp.StatusCode)
-
-		mp := make(map[string]interface{})
-		err = json.NewDecoder(resp.Body).Decode(&mp)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error decoding resourceMachineCreate get machine response body: %s", err))
-		}
-		log.Printf("[DEBUG] paperspace resourceMachineCreate get machine response: %v", mp)
-
-		state, ok := mp["state"].(string)
+		state, ok := body["state"].(string)
 		if !ok {
-			log.Printf("[WARNING] 'state' not found on resourceMachineCreate get machine response body")
-			return resource.RetryableError(fmt.Errorf("Expected machine to be ready but found no state"))
+			return resource.RetryableError(fmt.Errorf("[WARNING] Expected machine to be ready but found no state"))
 		}
 		if state != "ready" {
-			return resource.RetryableError(fmt.Errorf("Expected machine to be ready but was in state %s", state))
+			return resource.RetryableError(fmt.Errorf("[INFO] Expected machine to be ready but was in state %s", state))
 		}
 
-		SetResData(d, mp, "name")
-		SetResData(d, mp, "os")
-		SetResData(d, mp, "ram")
-		SetResData(d, mp, "cpus")
-		SetResData(d, mp, "gpu")
-		SetResDataFrom(d, mp, "storage_total", "storageTotal")
-		SetResDataFrom(d, mp, "storage_used", "storageUsed")
-		SetResDataFrom(d, mp, "usage_rate", "usageRate")
-		SetResDataFrom(d, mp, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
-		SetResDataFrom(d, mp, "shutdown_timeout_forces", "shutdownTimeoutForces")
-		SetResDataFrom(d, mp, "perform_auto_snapshot", "performAutoSnapshot")
-		SetResDataFrom(d, mp, "auto_snapshot_frequency", "autoSnapshotFrequency")
-		SetResDataFrom(d, mp, "auto_snapshot_save_count", "autoSnapshotSaveCount")
-		SetResDataFrom(d, mp, "agent_type", "agentType")
-		SetResDataFrom(d, mp, "dt_created", "dtCreated")
-		SetResData(d, mp, "state")
-		SetResDataFrom(d, mp, "network_id", "networkId") //overlays with null initially
-		SetResDataFrom(d, mp, "private_ip_address", "privateIpAddress")
-		SetResDataFrom(d, mp, "public_ip_address", "publicIpAddress")
-		SetResData(d, mp, "region") //overlays with null initially
-		SetResDataFrom(d, mp, "user_id", "userId")
-		SetResDataFrom(d, mp, "team_id", "teamId")
-		SetResDataFrom(d, mp, "script_id", "scriptId")
-		SetResDataFrom(d, mp, "dt_last_run", "dtLastRun")
+		SetResData(d, body, "name")
+		SetResData(d, body, "os")
+		SetResData(d, body, "ram")
+		SetResData(d, body, "cpus")
+		SetResData(d, body, "gpu")
+		SetResDataFrom(d, body, "storage_total", "storageTotal")
+		SetResDataFrom(d, body, "storage_used", "storageUsed")
+		SetResDataFrom(d, body, "usage_rate", "usageRate")
+		SetResDataFrom(d, body, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
+		SetResDataFrom(d, body, "shutdown_timeout_forces", "shutdownTimeoutForces")
+		SetResDataFrom(d, body, "perform_auto_snapshot", "performAutoSnapshot")
+		SetResDataFrom(d, body, "auto_snapshot_frequency", "autoSnapshotFrequency")
+		SetResDataFrom(d, body, "auto_snapshot_save_count", "autoSnapshotSaveCount")
+		SetResDataFrom(d, body, "agent_type", "agentType")
+		SetResDataFrom(d, body, "dt_created", "dtCreated")
+		SetResData(d, body, "state")
+		SetResDataFrom(d, body, "network_id", "networkId") //overlays with null initially
+		SetResDataFrom(d, body, "private_ip_address", "privateIpAddress")
+		SetResDataFrom(d, body, "public_ip_address", "publicIpAddress")
+		SetResData(d, body, "region") //overlays with null initially
+		SetResDataFrom(d, body, "user_id", "userId")
+		SetResDataFrom(d, body, "team_id", "teamId")
+		SetResDataFrom(d, body, "script_id", "scriptId")
+		SetResDataFrom(d, body, "dt_last_run", "dtLastRun")
 
-		d.SetId(id)
+		d.SetId(*id)
 
 		return resource.NonRetryableError(resourceMachineRead(d, m))
 	})
