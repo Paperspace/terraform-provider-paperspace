@@ -9,3 +9,7 @@ build-linux:
 build-darwin:
 	go mod tidy
 	GOOS=darwin GOARCH=amd64 go build -o terraform-provider-paperspace
+
+build-windows:
+	go mod tidy
+	GOOS=windows GOARCH=amd64 go build -o terraform-provider-paperspace.exe

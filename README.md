@@ -1,22 +1,15 @@
 # terraform-provider-paperspace
-Paperspace terraform provider
+This is an Terraform provider for Paperspace infrastructure.
 
-Note: currently this provider is offered as a terraform 'private cloud' provider while under early development.  We are moving toward contributing it back to the terraform open source project, which will remove the need for a separate download and installation step in the future.
-
-## Downloads
-
-Linux x64 [terraform-provider-paperspace](https://ps-terraform.s3.amazonaws.com/terraform-provider-paperspace)¹
-
-Windows x64 [terraform-provider-paperspace.exe](https://ps-terraform.s3.amazonaws.com/terraform-provider-paperspace.exe)²
-
-Darwin x64 (macOS) [terraform-provider-paperspace](https://ps-terraform.s3.amazonaws.com/darwin/terraform-provider-paperspace)¹
+It is offered currently as a Terraform 'private cloud' provider while under early development.  We are moving toward contributing it back to the terraform open source project, which will remove the need for a separate download and installation step in the future.
 
 
-¹ v0.1.3, built with go 1.14 and tested with terraform 0.12.26
-² v0.1.2, built with go 1.8.3 and tested with terraform 0.9.11
+## Releases
+Visit [Releases](https://github.com/Paperspace/terraform-provider-paperspace/releases) to download a pre-compiled binary for Linux, Windows, or Darwin. You can also [compile from source](#building-from-source).
+
 
 ## Installation and Testing
-1) Install [terraform](https://www.terraform.io/downloads.html) and make sure it is in your path.
+1) Install [terraform](https://www.terraform.io/downloads.html) v0.12.26 and make sure it is in your path.
 
 2) Download the Paperspace terraform provider from one of the links above, or build it from source as described below.
 
@@ -54,7 +47,7 @@ terraform show
 
 ## Building from source
 
-1) Install the latest version of [go](https://golang.org/dl/)
+1) Install the latest version of [go](https://golang.org/dl/) that supports go modules (we currently use go 1.14 for this project)
 
 2) Clone this repository and change to the project directory
 ```
@@ -73,9 +66,16 @@ On any platform:
 make build
 ```
 
+5) Compile the provider binary for various platforms
+
 For Linux x64:
 ```
 make build-linux
+```
+
+For Windows x64:
+```
+make build-windows
 ```
 
 For Darwin x64 (macOS):
@@ -83,10 +83,10 @@ For Darwin x64 (macOS):
 make build-darwin
 ```
 
-The output of the build  is a `terraform-provider-paperspace` executable.
+The output of the build is a `terraform-provider-paperspace` executable.
 
 Note: you cannot execute this provider binary directly.  The binary will be loaded by the terraform app if the provider binary is in your path and your .tf configuration files refer to the paperspace provider and paperspace resources, or datasources.
 
 ## Contributing
 
-Want to contribute?  Contact us at hello@paperspace.com
+Want to contribute? Contact us at hello@paperspace.com
