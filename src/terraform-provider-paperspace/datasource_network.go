@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).HttpClient
+	psc := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace dataSourceNetworkRead Client ready")
 
@@ -73,27 +74,32 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace network: must specify query filter properties")
 	}
 
-	resp, err := client.R().
-		Get("/networks/getNetworks" + queryStr)
+	url := fmt.Sprintf("%s/networks/getNetworks%s", psc.APIHost, queryStr)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("Error constructing GetNetworks request: %s", err)
+	}
+
+	resp, err := psc.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace network: %s", err)
 	}
 
-	statusCode := resp.StatusCode()
+	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace dataSourceNetworkRead StatusCode: %v", statusCode)
-	LogResponse("paperspace dataSourceNetworkRead", resp, err)
 	if statusCode == 404 {
 		return fmt.Errorf("Error reading paperspace network: networks not found")
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace network: Response: %s", resp.Body())
+		return fmt.Errorf("Error reading paperspace network: Response: %s", resp.Body)
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body(), &f)
+	err = json.NewDecoder(resp.Body).Decode(&f)
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling paperspace network read response: %s", err)
+		return fmt.Errorf("Error decoding GetNetworks response body: %s", err)
 	}
+	LogArrayResponse("paperspace dataSourceNetworkRead", req.URL, resp, f, err)
 
 	mpa := f.([]interface{})
 	if len(mpa) > 1 {

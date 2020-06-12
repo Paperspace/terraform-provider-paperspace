@@ -50,9 +50,9 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		body, err := psc.GetMachine(*id)
+		body, err := psc.GetMachine(id)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return resource.RetryableError(err)
 		}
 
 		state, ok := body["state"].(string)
@@ -88,7 +88,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 		SetResDataFrom(d, body, "script_id", "scriptId")
 		SetResDataFrom(d, body, "dt_last_run", "dtLastRun")
 
-		d.SetId(*id)
+		d.SetId(id)
 
 		return resource.NonRetryableError(resourceMachineRead(d, m))
 	})

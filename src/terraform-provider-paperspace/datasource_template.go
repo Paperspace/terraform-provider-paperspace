@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).HttpClient
+	psc := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace dataSourceTemplateRead Client ready")
 
@@ -81,27 +82,32 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace template: must specify query filter properties")
 	}
 
-	resp, err := client.R().
-		Get("/templates/getTemplates" + queryStr)
+	url := fmt.Sprintf("%s/templates/getTemplates%s", psc.APIHost, queryStr)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("Error constructing GetTemplates request: %s", err)
+	}
+
+	resp, err := psc.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace template: %s", err)
 	}
 
-	statusCode := resp.StatusCode()
+	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace dataSourceTemplateRead StatusCode: %v", statusCode)
-	LogResponse("paperspace dataSourceTemplateRead", resp, err)
 	if statusCode == 404 {
 		return fmt.Errorf("Error reading paperspace template: templates not found")
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace template: Response: %s", resp.Body())
+		return fmt.Errorf("Error reading paperspace template: Response: %s", resp.Body)
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body(), &f)
+	err = json.NewDecoder(resp.Body).Decode(&f)
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling paperspace template read response: %s", err)
+		return fmt.Errorf("Error decoding GetTemplate response body: %s", err)
 	}
+	LogArrayResponse("paperspace dataSourceTemplateRead", req.URL, resp, f, err)
 
 	mpa := f.([]interface{})
 	if len(mpa) > 1 {

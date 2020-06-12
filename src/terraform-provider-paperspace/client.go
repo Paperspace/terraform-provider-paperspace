@@ -55,6 +55,26 @@ func SetResData(d *schema.ResourceData, m map[string]interface{}, n string) {
 	SetResDataFrom(d, m, n, n)
 }
 
+// LogObjectResponse logs http response fields
+func LogObjectResponse(reqDesc string, reqURL *url.URL, resp *http.Response, body map[string]interface{}, err error) {
+	log.Printf("[INFO] Request: %v", reqDesc)
+	log.Printf("[INFO] Request URL: %v", reqURL)
+	log.Printf("[INFO] Response Status: %v", resp.Status)
+	log.Printf("[INFO] Response: %v", resp)
+	log.Printf("[INFO] Response Body: %s", body)
+	log.Printf("[INFO] Error: %v", err)
+}
+
+// LogArrayResponse logs http response fields
+func LogArrayResponse(reqDesc string, reqURL *url.URL, resp *http.Response, body interface{}, err error) {
+	log.Printf("[INFO] Request: %v", reqDesc)
+	log.Printf("[INFO] Request URL: %v", reqURL)
+	log.Printf("[INFO] Response Status: %v", resp.Status)
+	log.Printf("[INFO] Response: %v", resp)
+	log.Printf("[INFO] Response Body: %s", body)
+	log.Printf("[INFO] Error: %v", err)
+}
+
 type ClientConfig struct {
 	APIKey  string
 	APIHost string
@@ -118,26 +138,14 @@ func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
 	return h.rt.RoundTrip(req)
 }
 
-// LogResponse logs http response fields
-func LogResponse(reqDesc string, reqURL *url.URL, resp *http.Response, err error) {
-	log.Printf("[INFO] Request: %v", reqDesc)
-	log.Printf("[INFO] Request URL: %v", reqURL)
-	log.Printf("[INFO] Response Status: %v", resp.Status)
-	log.Printf("[INFO] Response Body: %v", resp) // or resp.String() or string(resp.Body())
-	log.Printf("[INFO] Error: %v", err)
-}
-
 func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{}, err error) {
 	url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", psc.APIHost, id)
-	log.Printf("[INFO] paperspace GetMachine, url: %s", url)
-
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error constructing GetMachine request: %s", err)
 	}
 
 	resp, err := psc.HttpClient.Do(req)
-	LogResponse("GetMachine", req.URL, resp, err)
 	defer resp.Body.Close()
 
 	if err != nil {
@@ -153,6 +161,8 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 		return nil, fmt.Errorf("Error decoding GetMachine response body: %s", err)
 	}
 
+	LogObjectResponse("GetMachine", req.URL, resp, body, err)
+
 	if resp.StatusCode == 404 {
 		return nil, nil
 	}
@@ -160,7 +170,7 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 	return body, nil
 }
 
-func (psc *PaperspaceClient) CreateMachine(data []byte) (id *string, err error) {
+func (psc *PaperspaceClient) CreateMachine(data []byte) (id string, err error) {
 	url := fmt.Sprintf("%s/machines/createSingleMachinePublic", psc.APIHost)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
@@ -168,27 +178,28 @@ func (psc *PaperspaceClient) CreateMachine(data []byte) (id *string, err error) 
 	}
 
 	resp, err := psc.HttpClient.Do(req)
-	LogResponse("CreateMachine", req.URL, resp, err)
 	defer resp.Body.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("Error sending CreateMachine request: %s", err)
+		return "", fmt.Errorf("Error sending CreateMachine request: %s", err)
 	}
 
 	body := make(map[string]interface{})
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding CreateMachine response body: %s", err)
+		return "", fmt.Errorf("Error decoding CreateMachine response body: %s", err)
 	}
+
+	LogObjectResponse("CreateMachine", req.URL, resp, body, err)
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Error on CreateMachine: Response: %s", body)
+		return "", fmt.Errorf("Error on CreateMachine: Response: %s", body)
 	}
 
-	id, _ = body["id"].(*string)
+	id, _ = body["id"].(string)
 
-	if *id == "" {
-		return nil, fmt.Errorf("Error on CreateMachine: id not found")
+	if id == "" {
+		return "", fmt.Errorf("Error on CreateMachine: id not found")
 	}
 
 	return id, nil
@@ -202,12 +213,19 @@ func (psc *PaperspaceClient) DeleteMachine(id string) (err error) {
 	}
 
 	resp, err := psc.HttpClient.Do(req)
-	LogResponse("DeleteMachine", req.URL, resp, err)
 	defer resp.Body.Close()
 
 	if err != nil {
 		return fmt.Errorf("Error sending DeleteMachine request: %s", err)
 	}
+
+	body := make(map[string]interface{})
+	err = json.NewDecoder(resp.Body).Decode(&body)
+	if err != nil {
+		log.Printf("Error decoding CreateMachine response body: %s", err)
+	}
+
+	LogObjectResponse("DeleteMachine", req.URL, resp, nil, err)
 
 	if resp.StatusCode != 204 {
 		return fmt.Errorf("Error deleting machine: Response: %s", resp.Body)
