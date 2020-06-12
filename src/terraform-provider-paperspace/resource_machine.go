@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -147,17 +148,15 @@ func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		body, err := psc.GetMachine(d.Id())
-
+		log.Printf("\nbody: %v\nerr: %v", body, err)
 		if err != nil {
+			if strings.Contains(err.Error(), "machine not found") {
+				return resource.NonRetryableError(nil)
+			}
 			return resource.RetryableError(err)
 		}
 
-		if body != nil {
-			return resource.RetryableError(fmt.Errorf("Expected machine to be deleted but still exists"))
-		}
-
-		// resp.StatusCode == 404
-		return resource.NonRetryableError(nil)
+		return resource.RetryableError(fmt.Errorf("Expected machine to be deleted but still exists"))
 	})
 }
 

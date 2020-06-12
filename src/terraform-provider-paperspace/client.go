@@ -163,12 +163,8 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 	}
 
 	nextID, _ := body["id"].(string)
-	if nextID == "" {
-		return nil, fmt.Errorf("Error on GetMachine response: body missing id")
-	}
-
-	if resp.StatusCode == 404 {
-		return nil, nil
+	if resp.StatusCode == 404 || nextID == "" {
+		return nil, fmt.Errorf("Error on GetMachine: machine not found")
 	}
 
 	return body, nil
@@ -210,7 +206,7 @@ func (psc *PaperspaceClient) CreateMachine(data []byte) (id string, err error) {
 
 func (psc *PaperspaceClient) DeleteMachine(id string) (err error) {
 	url := fmt.Sprintf("%s/machines/%s/destroyMachine", psc.APIHost, id)
-	req, err := http.NewRequest("DELETE", url, nil)
+	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing DeleteMachine request: %s", err)
 	}
@@ -221,13 +217,7 @@ func (psc *PaperspaceClient) DeleteMachine(id string) (err error) {
 	}
 	defer resp.Body.Close()
 
-	body := make(map[string]interface{})
-	err = json.NewDecoder(resp.Body).Decode(&body)
-	if err != nil {
-		log.Printf("Error decoding DeleteMachine response body: %s", err)
-	}
-
-	LogObjectResponse("DeleteMachine", req.URL, resp, body, err)
+	LogObjectResponse("DeleteMachine", req.URL, resp, nil, err)
 
 	if resp.StatusCode != 204 {
 		return fmt.Errorf("Error deleting machine, statusCode: %d", resp.StatusCode)
