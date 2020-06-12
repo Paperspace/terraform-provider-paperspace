@@ -108,7 +108,7 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error decoding GetTemplate response body: %s", err)
 	}
-	LogArrayResponse("paperspace dataSourceTemplateRead", req.URL, resp, f, err)
+	LogHttpResponseArray("paperspace dataSourceTemplateRead", req.URL, resp, f, err)
 
 	mpa := f.([]interface{})
 	if len(mpa) > 1 {

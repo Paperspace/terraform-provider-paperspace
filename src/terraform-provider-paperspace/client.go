@@ -70,7 +70,7 @@ func logHttpResponseObject(reqURL *url.URL, resp *http.Response, body map[string
 }
 
 // LogArrayResponse logs http response fields
-func LogArrayResponse(reqDesc string, reqURL *url.URL, resp *http.Response, body interface{}, err error) {
+func LogHttpResponseArray(reqDesc string, reqURL *url.URL, resp *http.Response, body interface{}, err error) {
 	log.Printf("Request: %v", reqDesc)
 	log.Printf("Request URL: %v", reqURL)
 	log.Printf("Response Status: %v", resp.Status)

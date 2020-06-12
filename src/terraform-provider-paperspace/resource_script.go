@@ -56,7 +56,7 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error decoding GetScript response body: %s", err)
 	}
-	LogArrayResponse("paperspace dataSourceGetScript", req.URL, resp, f, err)
+	LogHttpResponseArray("paperspace dataSourceGetScript", req.URL, resp, f, err)
 
 	mp := f.(map[string]interface{})
 	id, _ := mp["id"].(string)
@@ -106,7 +106,7 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 	}
 	var body interface{}
 	json.NewDecoder(resp.Body).Decode(&body)
-	LogArrayResponse("paperspace resourceScriptCreate", req.URL, resp, body, err)
+	LogHttpResponseArray("paperspace resourceScriptCreate", req.URL, resp, body, err)
 
 	if statusCode != 200 {
 		return fmt.Errorf("Error reading paperspace script: Response: %s", body)
@@ -152,7 +152,7 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 
 	json.NewDecoder(resp.Body).Decode(&body)
 	s, err := json.Marshal(body)
-	LogArrayResponse("paperspace resourceScriptCreate", req.URL, resp, body, err)
+	LogHttpResponseArray("paperspace resourceScriptCreate", req.URL, resp, body, err)
 
 	if statusCode == 404 {
 		log.Printf("[INFO] paperspace resourceScriptRead text scriptId not found")
@@ -192,7 +192,7 @@ func resourceScriptDelete(d *schema.ResourceData, m interface{}) error {
 
 	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace resourceScriptDelete StatusCode: %v", statusCode)
-	LogArrayResponse("paperspace resourceScriptDelete", req.URL, resp, nil, err)
+	LogHttpResponseArray("paperspace resourceScriptDelete", req.URL, resp, nil, err)
 	if statusCode != 204 && statusCode != 404 {
 		return fmt.Errorf("Error deleting paperspace script: Response: %s", resp.Body)
 	}

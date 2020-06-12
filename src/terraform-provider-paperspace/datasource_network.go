@@ -100,7 +100,7 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error decoding GetNetworks response body: %s", err)
 	}
-	LogArrayResponse("paperspace dataSourceNetworkRead", req.URL, resp, f, err)
+	LogHttpResponseArray("paperspace dataSourceNetworkRead", req.URL, resp, f, err)
 
 	mpa := f.([]interface{})
 	if len(mpa) > 1 {
