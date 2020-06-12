@@ -1,10 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"log"
+	"net/http"
+	"net/url"
 	"reflect"
+	"strings"
+	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -50,93 +56,168 @@ func SetResData(d *schema.ResourceData, m map[string]interface{}, n string) {
 	SetResDataFrom(d, m, n, n)
 }
 
-type Config struct {
-	ApiKey  string
-	ApiHost string
+func logHttpRequestConstruction(operationType string, url string, data *bytes.Buffer) {
+	log.Printf("Constructing %s request to url: %s, data: %v", operationType, url, data)
+}
+
+// logHttpResponseObject logs http response fields
+func logHttpResponseObject(reqURL *url.URL, resp *http.Response, body map[string]interface{}, err error) {
+	log.Printf("Request URL: %v", reqURL)
+	log.Printf("Response Status: %v", resp.Status)
+	log.Printf("Response: %v", resp)
+	log.Printf("Response Body: %s", body)
+	log.Printf("Error: %v", err)
+}
+
+// LogArrayResponse logs http response fields
+func LogHttpResponseArray(reqDesc string, reqURL *url.URL, resp *http.Response, body interface{}, err error) {
+	log.Printf("Request: %v", reqDesc)
+	log.Printf("Request URL: %v", reqURL)
+	log.Printf("Response Status: %v", resp.Status)
+	log.Printf("Response: %v", resp)
+	log.Printf("Response Body: %s", body)
+	log.Printf("Error: %v", err)
+}
+
+type ClientConfig struct {
+	APIKey  string
+	APIHost string
 	Region  string
 }
 
 type PaperspaceClient struct {
-	ApiKey      string
-	ApiHost     string
-	Region      string
-	RestyClient *resty.Client
+	APIKey     string
+	APIHost    string
+	Region     string
+	HttpClient *http.Client
 }
 
-func (c *Config) Client() (PaperspaceClient, error) {
-
-	restyClient := resty.New()
-
-	restyClient.SetDebug(true)
-
-	restyClient.OnBeforeRequest(func(c *resty.Client, req *resty.Request) error {
-		// Explore request object
-		log.Println("[INFO] Request Info:")
-		log.Println("[INFO] client.HostURL", c.HostURL)
-		log.Println("[INFO] client.Header", c.Header)
-		log.Println("[INFO] req.Method", req.Method)
-		log.Println("[INFO] req.URL", req.URL)
-		log.Println("[INFO] req.Body", req.Body)
-		log.Println("[INFO] req.AuthScheme", req.AuthScheme)
-		log.Println("[INFO] req.RawRequest", req.RawRequest)
-		log.Println("[INFO] req.Error", req.Error)
-
-		return nil
-	})
-
-	restyClient.OnAfterResponse(func(c *resty.Client, resp *resty.Response) error {
-
-		// Explore response object
-		log.Println("[INFO] Response Info:")
-		// log.Println("[INFO] Error      :", err)
-		log.Println("[INFO] Status Code:", resp.StatusCode())
-		log.Println("[INFO] Status     :", resp.Status())
-		log.Println("[INFO] Proto      :", resp.Proto())
-		log.Println("[INFO] Time       :", resp.Time())
-		log.Println("[INFO] Received At:", resp.ReceivedAt())
-		log.Println("[INFO] Body       :\n", resp)
-
-		// Explore trace info
-		log.Println("[INFO] Request Trace Info:")
-		ti := resp.Request.TraceInfo()
-		log.Println("[INFO] DNSLookup    :", ti.DNSLookup)
-		log.Println("[INFO] ConnTime     :", ti.ConnTime)
-		log.Println("[INFO] TCPConnTime  :", ti.TCPConnTime)
-		log.Println("[INFO] TLSHandshake :", ti.TLSHandshake)
-		log.Println("[INFO] ServerTime   :", ti.ServerTime)
-		log.Println("[INFO] ResponseTime :", ti.ResponseTime)
-		log.Println("[INFO] TotalTime    :", ti.TotalTime)
-		log.Println("[INFO] IsConnReused :", ti.IsConnReused)
-		log.Println("[INFO] IsConnWasIdle:", ti.IsConnWasIdle)
-		log.Println("[INFO] ConnIdleTime :", ti.ConnIdleTime)
-
-		return nil
-	})
-
-	restyClient.
-		SetHostURL(c.ApiHost).
-		SetHeader("x-api-key", c.ApiKey).
-		SetHeader("Accept", "application/json").
-		SetHeader("Content-Type", "application/json").
-		SetHeader("User-Agent", "terraform-provider-paperspace").
-		SetHeader("ps_client_name", "terraform-provider-paperspace")
-
-	client := PaperspaceClient{
-		ApiKey:      c.ApiKey,
-		ApiHost:     c.ApiHost,
-		Region:      c.Region,
-		RestyClient: restyClient,
+func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient, err error) {
+	timeout := 10 * time.Second
+	client := &http.Client{
+		Timeout: timeout,
 	}
 
-	return client, nil
+	transport := WithHeader(client.Transport)
+	transport.Set("x-api-key", c.APIKey)
+	transport.Set("Accept", "application/json")
+	transport.Set("Content-Type", "application/json")
+	transport.Set("User-Agent", "terraform-provider-paperspace")
+	transport.Set("ps_client_name", "terraform-provider-paperspace")
+	client.Transport = transport
+
+	paperspaceClient = PaperspaceClient{
+		APIKey:     c.APIKey,
+		APIHost:    c.APIHost,
+		Region:     c.Region,
+		HttpClient: client,
+	}
+
+	return paperspaceClient, nil
 }
 
-func LogResponse(reqDesc string, resp *resty.Response, err error) {
-	log.Printf("[INFO] Request: %v", reqDesc)
-	log.Printf("[INFO] Error: %v", err)
-	log.Printf("[INFO] Response Status Code: %v", resp.StatusCode())
-	log.Printf("[INFO] Response Status: %v", resp.Status())
-	log.Printf("[INFO] Response Time: %v", resp.Time())
-	log.Printf("[INFO] Response Received At: %v", resp.ReceivedAt())
-	log.Printf("[INFO] Response Body: %v", resp) // or resp.String() or string(resp.Body())
+// from https://stackoverflow.com/questions/51325704/adding-a-default-http-header-in-go
+type withHeader struct {
+	http.Header
+	transport http.RoundTripper
+}
+
+// WithHeader effectively allows http.Client to have global headers
+func WithHeader(transport http.RoundTripper) withHeader {
+	if transport == nil {
+		transport = http.DefaultTransport
+	}
+
+	return withHeader{
+		Header:    make(http.Header),
+		transport: transport,
+	}
+}
+
+func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
+	for k, v := range h.Header {
+		req.Header[k] = v
+	}
+
+	return h.transport.RoundTrip(req)
+}
+
+func (paperspaceClient *PaperspaceClient) Request(operationType string, url string, data []byte) (body map[string]interface{}, statusCode int, err error) {
+	buf := bytes.NewBuffer(data)
+
+	logHttpRequestConstruction(operationType, url, buf)
+
+	req, err := http.NewRequest(operationType, url, buf)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Error constructing request: %s", err)
+	}
+
+	resp, err := paperspaceClient.HttpClient.Do(req)
+	if err != nil {
+		return nil, resp.StatusCode, fmt.Errorf("Error completing request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&body)
+	if err != nil {
+		return nil, resp.StatusCode, fmt.Errorf("Error decoding response body: %s", err)
+	}
+
+	logHttpResponseObject(req.URL, resp, body, err)
+
+	return body, resp.StatusCode, nil
+}
+
+func (paperspaceClient *PaperspaceClient) GetMachine(id string) (body map[string]interface{}, err error) {
+	url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", paperspaceClient.APIHost, id)
+	body, statusCode, err := paperspaceClient.Request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if statusCode != 404 && statusCode != 200 {
+		return nil, fmt.Errorf("Error on GetMachine response: statusCode: %d", statusCode)
+	}
+
+	nextID, _ := body["id"].(string)
+	if statusCode == 404 || nextID == "" {
+		return nil, fmt.Errorf("Error on GetMachine: machine not found")
+	}
+
+	return body, nil
+}
+
+func (paperspaceClient *PaperspaceClient) CreateMachine(data []byte) (id string, err error) {
+	url := fmt.Sprintf("%s/machines/createSingleMachinePublic", paperspaceClient.APIHost)
+	body, statusCode, err := paperspaceClient.Request("POST", url, data)
+	if err != nil {
+		return "", err
+	}
+
+	if statusCode != 200 {
+		return "", fmt.Errorf("Error on CreateMachine: Response: %s", body)
+	}
+
+	id, _ = body["id"].(string)
+
+	if id == "" {
+		return "", fmt.Errorf("Error on CreateMachine: id not found")
+	}
+
+	return id, nil
+}
+
+func (paperspaceClient *PaperspaceClient) DeleteMachine(id string) (err error) {
+	url := fmt.Sprintf("%s/machines/%s/destroyMachine", paperspaceClient.APIHost, id)
+	_, statusCode, err := paperspaceClient.Request("POST", url, nil)
+	// /destroyMachine returns the string "EOF" if it was successful, which can't be JSON-decoded
+	if err != nil && !strings.Contains(err.Error(), "EOF") {
+		return err
+	}
+
+	if statusCode != 204 {
+		return fmt.Errorf("Error deleting machine")
+	}
+
+	return nil
 }

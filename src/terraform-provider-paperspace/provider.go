@@ -70,14 +70,14 @@ func envDefaultFuncAllowMissingDefault(k string, d string) schema.SchemaDefaultF
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	config := Config{
-		ApiKey:  d.Get("api_key").(string),
-		ApiHost: d.Get("api_host").(string),
+	config := ClientConfig{
+		APIKey:  d.Get("api_key").(string),
+		APIHost: d.Get("api_host").(string),
 		Region:  d.Get("region").(string),
 	}
 
-	log.Printf("[INFO] paperspace provider api_key %v", config.ApiKey)
-	log.Printf("[INFO] paperspace provider api_host %v", config.ApiHost)
+	log.Printf("[INFO] paperspace provider api_key %v", config.APIKey)
+	log.Printf("[INFO] paperspace provider api_host %v", config.APIHost)
 	if config.Region != "" {
 		log.Printf("[INFO] paperspace provider region %v", config.Region)
 	}

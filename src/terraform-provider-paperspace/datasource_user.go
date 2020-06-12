@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).RestyClient
+	paperspaceClient := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace dataSourceUserRead Client ready")
 
@@ -65,27 +66,33 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace user: must specify query filter properties")
 	}
 
-	resp, err := client.R().
-		Get("/users/getUsers" + queryStr)
+	url := fmt.Sprintf("%s/users/getUsers%s", paperspaceClient.APIHost, queryStr)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("Error constructing GetUsers request: %s", err)
+	}
+
+	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace user: %s", err)
 	}
+	defer resp.Body.Close()
 
-	statusCode := resp.StatusCode()
+	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace dataSourceUserRead StatusCode: %v", statusCode)
-	LogResponse("paperspace dataSourceUserRead", resp, err)
 	if statusCode == 404 {
 		return fmt.Errorf("Error reading paperspace user: users not found")
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace user: Response: %s", resp.Body())
+		return fmt.Errorf("Error reading paperspace user: Response: %s", resp.Body)
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body(), &f)
+	err = json.NewDecoder(resp.Body).Decode(&f)
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling paperspace user read response: %s", err)
+		return fmt.Errorf("Error decoding GetUsers response body: %s", err)
 	}
+	LogHttpResponseArray("paperspace dataSourceTemplateRead", req.URL, resp, f, err)
 
 	mpa := f.([]interface{})
 	if len(mpa) > 1 {
