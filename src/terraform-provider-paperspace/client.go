@@ -146,15 +146,10 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 	}
 
 	resp, err := psc.HttpClient.Do(req)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return nil, fmt.Errorf("Error sending GetMachine request: %s", err)
 	}
-
-	if resp.StatusCode != 404 && resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Error reading paperspace machine: Response: %s", body)
-	}
+	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
@@ -162,6 +157,10 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 	}
 
 	LogObjectResponse("GetMachine", req.URL, resp, body, err)
+
+	if resp.StatusCode != 404 && resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error on GetMachine response: statusCode: %d", resp.StatusCode)
+	}
 
 	nextID, _ := body["id"].(string)
 	if nextID == "" {
@@ -179,15 +178,14 @@ func (psc *PaperspaceClient) CreateMachine(data []byte) (id string, err error) {
 	url := fmt.Sprintf("%s/machines/createSingleMachinePublic", psc.APIHost)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
-		fmt.Errorf("Error constructing CreateMachine request: %s", err)
+		return "", fmt.Errorf("Error constructing CreateMachine request: %s", err)
 	}
 
 	resp, err := psc.HttpClient.Do(req)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return "", fmt.Errorf("Error sending CreateMachine request: %s", err)
 	}
+	defer resp.Body.Close()
 
 	body := make(map[string]interface{})
 	err = json.NewDecoder(resp.Body).Decode(&body)
@@ -218,22 +216,21 @@ func (psc *PaperspaceClient) DeleteMachine(id string) (err error) {
 	}
 
 	resp, err := psc.HttpClient.Do(req)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return fmt.Errorf("Error sending DeleteMachine request: %s", err)
 	}
+	defer resp.Body.Close()
 
 	body := make(map[string]interface{})
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
-		log.Printf("Error decoding CreateMachine response body: %s", err)
+		log.Printf("Error decoding DeleteMachine response body: %s", err)
 	}
 
-	LogObjectResponse("DeleteMachine", req.URL, resp, nil, err)
+	LogObjectResponse("DeleteMachine", req.URL, resp, body, err)
 
 	if resp.StatusCode != 204 {
-		return fmt.Errorf("Error deleting machine: Response: %s", resp.Body)
+		return fmt.Errorf("Error deleting machine, statusCode: %d", resp.StatusCode)
 	}
 
 	return nil
