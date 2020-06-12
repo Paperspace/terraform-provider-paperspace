@@ -88,45 +88,45 @@ type PaperspaceClient struct {
 	HttpClient *http.Client
 }
 
-func (c *ClientConfig) Client() (PaperspaceClient, error) {
+func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient, err error) {
 	timeout := 10 * time.Second
-	hc := &http.Client{
+	client := &http.Client{
 		Timeout: timeout,
 	}
 
-	rt := WithHeader(hc.Transport)
-	rt.Set("x-api-key", c.APIKey)
-	rt.Set("Accept", "application/json")
-	rt.Set("Content-Type", "application/json")
-	rt.Set("User-Agent", "terraform-provider-paperspace")
-	rt.Set("ps_client_name", "terraform-provider-paperspace")
-	hc.Transport = rt
+	transport := WithHeader(client.Transport)
+	transport.Set("x-api-key", c.APIKey)
+	transport.Set("Accept", "application/json")
+	transport.Set("Content-Type", "application/json")
+	transport.Set("User-Agent", "terraform-provider-paperspace")
+	transport.Set("ps_client_name", "terraform-provider-paperspace")
+	client.Transport = transport
 
-	client := PaperspaceClient{
+	paperspaceClient = PaperspaceClient{
 		APIKey:     c.APIKey,
 		APIHost:    c.APIHost,
 		Region:     c.Region,
-		HttpClient: hc,
+		HttpClient: client,
 	}
 
-	return client, nil
+	return paperspaceClient, nil
 }
 
 // from https://stackoverflow.com/questions/51325704/adding-a-default-http-header-in-go
 type withHeader struct {
 	http.Header
-	rt http.RoundTripper
+	transport http.RoundTripper
 }
 
 // WithHeader effectively allows http.Client to have global headers
-func WithHeader(rt http.RoundTripper) withHeader {
-	if rt == nil {
-		rt = http.DefaultTransport
+func WithHeader(transport http.RoundTripper) withHeader {
+	if transport == nil {
+		transport = http.DefaultTransport
 	}
 
 	return withHeader{
-		Header: make(http.Header),
-		rt:     rt,
+		Header:    make(http.Header),
+		transport: transport,
 	}
 }
 
@@ -135,17 +135,17 @@ func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
 		req.Header[k] = v
 	}
 
-	return h.rt.RoundTrip(req)
+	return h.transport.RoundTrip(req)
 }
 
-func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{}, err error) {
-	url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", psc.APIHost, id)
+func (paperspaceClient *PaperspaceClient) GetMachine(id string) (body map[string]interface{}, err error) {
+	url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", paperspaceClient.APIHost, id)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error constructing GetMachine request: %s", err)
 	}
 
-	resp, err := psc.HttpClient.Do(req)
+	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Error completing GetMachine request: %s", err)
 	}
@@ -170,14 +170,14 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 	return body, nil
 }
 
-func (psc *PaperspaceClient) CreateMachine(data []byte) (id string, err error) {
-	url := fmt.Sprintf("%s/machines/createSingleMachinePublic", psc.APIHost)
+func (paperspaceClient *PaperspaceClient) CreateMachine(data []byte) (id string, err error) {
+	url := fmt.Sprintf("%s/machines/createSingleMachinePublic", paperspaceClient.APIHost)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return "", fmt.Errorf("Error constructing CreateMachine request: %s", err)
 	}
 
-	resp, err := psc.HttpClient.Do(req)
+	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("Error completing CreateMachine request: %s", err)
 	}
@@ -204,14 +204,14 @@ func (psc *PaperspaceClient) CreateMachine(data []byte) (id string, err error) {
 	return id, nil
 }
 
-func (psc *PaperspaceClient) DeleteMachine(id string) (err error) {
-	url := fmt.Sprintf("%s/machines/%s/destroyMachine", psc.APIHost, id)
+func (paperspaceClient *PaperspaceClient) DeleteMachine(id string) (err error) {
+	url := fmt.Sprintf("%s/machines/%s/destroyMachine", paperspaceClient.APIHost, id)
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing DeleteMachine request: %s", err)
 	}
 
-	resp, err := psc.HttpClient.Do(req)
+	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error completing DeleteMachine request: %s", err)
 	}

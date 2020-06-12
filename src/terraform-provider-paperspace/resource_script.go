@@ -11,7 +11,7 @@ import (
 )
 
 func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
-	psc := m.(PaperspaceClient)
+	paperspaceClient := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace resourceScriptCreate Client ready")
 
@@ -33,13 +33,13 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 	data, _ := json.MarshalIndent(body, "", "  ")
 	log.Println(string(data))
 
-	url := fmt.Sprintf("%s/scripts/createScript", psc.APIHost)
+	url := fmt.Sprintf("%s/scripts/createScript", paperspaceClient.APIHost)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("Error constructing CreateScript request: %s", err)
 	}
 
-	resp, err := psc.HttpClient.Do(req)
+	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error creating paperspace script: %s", err)
 	}
@@ -81,17 +81,17 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
-	psc := m.(PaperspaceClient)
+	paperspaceClient := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace resourceScriptRead Client ready")
 
-	url := fmt.Sprintf("%s/scripts/getScript?scriptId=%s", psc.APIHost, d.Id())
+	url := fmt.Sprintf("%s/scripts/getScript?scriptId=%s", paperspaceClient.APIHost, d.Id())
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing GetScript request: %s", err)
 	}
 
-	resp, err := psc.HttpClient.Do(req)
+	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error completing GetScript request: %s", err)
 	}
@@ -135,13 +135,13 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 	SetResDataFrom(d, mp, "is_enabled", "isEnabled")
 	SetResDataFrom(d, mp, "run_once", "runOnce")
 
-	url = fmt.Sprintf("%s/scripts/getScriptText?scriptId=%s", psc.APIHost, d.Id())
+	url = fmt.Sprintf("%s/scripts/getScriptText?scriptId=%s", paperspaceClient.APIHost, d.Id())
 	req, err = http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing GetScriptText request: %s", err)
 	}
 
-	resp, err = psc.HttpClient.Do(req)
+	resp, err = paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace script text: %s", err)
 	}
@@ -175,16 +175,16 @@ func resourceScriptUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptDelete(d *schema.ResourceData, m interface{}) error {
-	psc := m.(PaperspaceClient)
+	paperspaceClient := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace resourceScriptDelete Client ready")
 
-	url := fmt.Sprintf("%s/scripts/%s/destroy", psc.APIHost, d.Id())
+	url := fmt.Sprintf("%s/scripts/%s/destroy", paperspaceClient.APIHost, d.Id())
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing DeleteScript request: %s", err)
 	}
-	resp, err := psc.HttpClient.Do(req)
+	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error deleting paperspace script: %s", err)
 	}

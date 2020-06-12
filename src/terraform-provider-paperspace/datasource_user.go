@@ -11,7 +11,7 @@ import (
 )
 
 func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
-	psc := m.(PaperspaceClient)
+	paperspaceClient := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace dataSourceUserRead Client ready")
 
@@ -66,13 +66,13 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace user: must specify query filter properties")
 	}
 
-	url := fmt.Sprintf("%s/users/getUsers%s", psc.APIHost, queryStr)
+	url := fmt.Sprintf("%s/users/getUsers%s", paperspaceClient.APIHost, queryStr)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing GetUsers request: %s", err)
 	}
 
-	resp, err := psc.HttpClient.Do(req)
+	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace user: %s", err)
 	}

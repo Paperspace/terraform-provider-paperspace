@@ -11,7 +11,7 @@ import (
 )
 
 func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
-	psc := m.(PaperspaceClient)
+	paperspaceClient := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace dataSourceTemplateRead Client ready")
 
@@ -82,13 +82,13 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace template: must specify query filter properties")
 	}
 
-	url := fmt.Sprintf("%s/templates/getTemplates%s", psc.APIHost, queryStr)
+	url := fmt.Sprintf("%s/templates/getTemplates%s", paperspaceClient.APIHost, queryStr)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing GetTemplates request: %s", err)
 	}
 
-	resp, err := psc.HttpClient.Do(req)
+	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace template: %s", err)
 	}

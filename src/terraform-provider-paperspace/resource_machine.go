@@ -12,7 +12,7 @@ import (
 )
 
 func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
-	psc := m.(PaperspaceClient)
+	paperspaceClient := m.(PaperspaceClient)
 
 	region := m.(PaperspaceClient).Region
 	if r, ok := d.GetOk("region"); ok {
@@ -45,13 +45,13 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	data, _ := json.MarshalIndent(body, "", "  ")
 	log.Println(string(data))
 
-	id, err := psc.CreateMachine(data)
+	id, err := paperspaceClient.CreateMachine(data)
 	if err != nil {
 		return err
 	}
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		body, err := psc.GetMachine(id)
+		body, err := paperspaceClient.GetMachine(id)
 		if err != nil {
 			return resource.RetryableError(err)
 		}
@@ -96,9 +96,9 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
-	psc := m.(PaperspaceClient)
+	paperspaceClient := m.(PaperspaceClient)
 
-	_, err := psc.GetMachine(d.Id())
+	_, err := paperspaceClient.GetMachine(d.Id())
 	if err != nil {
 		d.SetId("")
 		return err
@@ -139,15 +139,15 @@ func resourceMachineUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
-	psc := m.(PaperspaceClient)
+	paperspaceClient := m.(PaperspaceClient)
 
-	err := psc.DeleteMachine(d.Id())
+	err := paperspaceClient.DeleteMachine(d.Id())
 	if err != nil {
 		return err
 	}
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		body, err := psc.GetMachine(d.Id())
+		body, err := paperspaceClient.GetMachine(d.Id())
 		log.Printf("\nbody: %v\nerr: %v", body, err)
 		if err != nil {
 			if strings.Contains(err.Error(), "machine not found") {
