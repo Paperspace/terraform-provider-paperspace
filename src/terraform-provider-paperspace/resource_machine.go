@@ -12,9 +12,7 @@ import (
 )
 
 func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).RestyClient
-
-	log.Printf("[INFO] paperspace resourceMachineCreate Client ready")
+	psc := m.(PaperspaceClient)
 
 	region := m.(PaperspaceClient).Region
 	if r, ok := d.GetOk("region"); ok {
@@ -47,69 +45,24 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	data, _ := json.MarshalIndent(body, "", "  ")
 	log.Println(string(data))
 
-	resp, err := client.R().
-		EnableTrace().
-		SetBody(body).
-		Post("/machines/createSingleMachinePublic")
-
+	id, err := psc.CreateMachine(data)
 	if err != nil {
-		return fmt.Errorf("Error creating paperspace machine: %s", err)
+		return err
 	}
-
-	statusCode := resp.StatusCode()
-	log.Printf("[INFO] paperspace resourceMachineCreate StatusCode: %v", statusCode)
-	LogResponse("paperspace resourceMachineCreate", resp, err)
-	if statusCode != 200 {
-		return fmt.Errorf("Error creating paperspace machine: Response: %s", resp.Body())
-	}
-
-	var f interface{}
-	err = json.Unmarshal(resp.Body(), &f)
-
-	/*fake := []byte(`{"id":"psmfffm3","name":"Tom Terraform Test 4","os":null,"ram":null,
-	  "cpus":1,"gpu":null,"storageTotal":null,"storageUsed":null,"usageRate":"C1 Hourly",
-	  "shutdownTimeoutInHours":null,"shutdownTimeoutForces":false,"performAutoSnapshot":false,
-	  "autoSnapshotFrequency":null,"autoSnapshotSaveCount":null,"agentType":"LinuxHeadless",
-	  "dtCreated":"2017-06-22T04:29:59.501Z","state":"provisioning","networkId":null,
-	  "privateIpAddress":null,"publicIpAddress":null,"region":null,"userId":"uijn3il",
-	  "teamId":null}`)
-	err := json.Unmarshal(fake, &f)*/
-
-	if err != nil {
-		return fmt.Errorf("Error unmarshalling paperspace machine create response: %s", err)
-	}
-
-	mp := f.(map[string]interface{})
-	id, _ := mp["id"].(string)
-
-	if id == "" {
-		return fmt.Errorf("Error in paperspace machine create data: id not found")
-	}
-
-	log.Printf("[INFO] paperspace resourceMachineCreate returned id: %v", id)
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		timeout := 10 * time.Second
-		retryClient := &http.Client{
-			Timeout: timeout,
-		}
-		url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", m.(PaperspaceClient).ApiHost, id)
+		url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", m.(PaperspaceClient).APIHost, id)
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("[WARNING] Constructing resourceMachineCreate get machine request failed: %s", err))
 		}
-		req.Header.Set("x-api-key", m.(PaperspaceClient).ApiKey)
-		req.Header.Set("Accept", "application/json")
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("User-Agent", "terraform-provider-paperspace")
-		req.Header.Set("ps_client_name", "terraform-provider-paperspace")
 
-		resp, err := retryClient.Do(req)
+		resp, err := client.Do(req)
+		defer resp.Body.Close()
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine: %s", err))
 		}
 		log.Printf("[DEBUG] paperspace resourceMachineCreate get machine response StatusCode: %v", resp.StatusCode)
-		defer resp.Body.Close()
 
 		mp := make(map[string]interface{})
 		err = json.NewDecoder(resp.Body).Decode(&mp)
@@ -159,38 +112,23 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).RestyClient
+	psc := m.(PaperspaceClient)
 
-	log.Printf("[INFO] paperspace resourceMachineRead Client ready")
-
-	resp, err := client.R().
-		Get("/machines/getMachinePublic?machineId=" + d.Id())
-
+	body, statusCode, err := psc.GetMachine(d.Id())
 	if err != nil {
-		return fmt.Errorf("Error reading paperspace machine: %s", err)
+		return err
 	}
 
-	statusCode := resp.StatusCode()
-	log.Printf("[INFO] paperspace resourceMachineRead StatusCode: %v", statusCode)
-	LogResponse("paperspace resourceMachineCreate", resp, err)
-	if statusCode == 404 {
+	if *statusCode == 404 {
 		log.Printf("[INFO] paperspace resourceMachineRead machineId not found; removing resource %s", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace machine: Response: %s", resp.Body())
+	if *statusCode != 200 {
+		return fmt.Errorf("Error reading paperspace machine: Response: %s", body)
 	}
 
-	var f interface{}
-	err = json.Unmarshal(resp.Body(), &f)
-
-	if err != nil {
-		return fmt.Errorf("Error unmarshalling paperspace machine read response: %s", err)
-	}
-
-	mp := f.(map[string]interface{})
-	id, _ := mp["id"].(string)
+	id, _ := body["id"].(string)
 
 	if id == "" {
 		log.Printf("[WARNING] paperspace resourceMachineRead machine id not found; removing resource %s", d.Id())
@@ -200,6 +138,7 @@ func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] paperspace resourceMachineRead returned id: %v", id)
 
+	mp := make(map[string]interface{})
 	SetResData(d, mp, "name")
 	SetResData(d, mp, "os")
 	SetResData(d, mp, "ram")
@@ -236,57 +175,58 @@ func resourceMachineUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).RestyClient
+	client := m.(PaperspaceClient).HttpClient
 
 	log.Printf("[INFO] paperspace resourceMachineDelete Client ready")
 
-	resp, err := client.R().
-		Post("/machines/" + d.Id() + "/destroyMachine")
+	url := fmt.Sprintf("/machines/%s/destroyMachine", d.Id())
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		fmt.Errorf("[WARNING] Constructing resourceMachineCreate delete machine request failed: %s", err)
+	}
 
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
 	if err != nil {
 		return fmt.Errorf("Error deleting paperspace machine: %s", err)
 	}
 
-	statusCode := resp.StatusCode()
-	log.Printf("[INFO] paperspace resourceMachineDelete StatusCode: %v", statusCode)
-	LogResponse("paperspace resourceMachineDelete", resp, err)
-
-	if statusCode != 204 {
-		return fmt.Errorf("Error deleting paperspace machine: Response: %s", resp.Body())
+	if resp.StatusCode != 204 {
+		return fmt.Errorf("Error deleting paperspace machine: Response: %s", resp.Body)
 	}
 
-	log.Printf("[INFO] paperspace resourceMachineDelete machine successfully started deleting, StatusCode: %v", statusCode)
+	log.Printf("[INFO] paperspace resourceMachineDelete machine successfully started deleting, StatusCode: %v", resp.StatusCode)
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		resp, err = client.R().
-			EnableTrace().
-			Get("/machines/getMachinePublic?machineId=" + d.Id())
+		url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", m.(PaperspaceClient).APIHost, d.Id())
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("[WARNING] Constructing resourceMachineCreate get machine request failed: %s", err))
+		}
 
+		resp, err := client.Do(req)
+		defer resp.Body.Close()
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine: %s", err))
 		}
+		log.Printf("[DEBUG] paperspace resourceMachineCreate get machine response StatusCode: %v", resp.StatusCode)
 
-		statusCode := resp.StatusCode()
-		log.Printf("[INFO] paperspace resourceMachineDelete StatusCode: %v", statusCode)
+		mp := make(map[string]interface{})
+		err = json.NewDecoder(resp.Body).Decode(&mp)
+
 		LogResponse("paperspace resourceMachineDelete", resp, err)
 
-		if statusCode != 200 && statusCode != 404 {
+		if resp.StatusCode != 200 && resp.StatusCode != 404 {
 			return resource.NonRetryableError(fmt.Errorf("Error getting paperspace machine, Status Code %s", err))
 		}
 
-		if statusCode == 200 {
-			mp := make(map[string]interface{})
-			err := json.Unmarshal(resp.Body(), &mp)
-			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("Error unmarshalling machine response body: %s", err))
-			}
-
+		if resp.StatusCode == 200 {
 			state, _ := mp["state"].(string)
 			return resource.RetryableError(fmt.Errorf("Expected machine to be deleted but was in state %s", state))
 		}
 
-		// statusCode == 404
-		log.Printf("[INFO] paperspace resourceMachineDelete machine successfully deleted, StatusCode: %v", statusCode)
+		// resp.StatusCode == 404
+		log.Printf("[INFO] paperspace resourceMachineDelete machine successfully deleted, StatusCode: %v", resp.StatusCode)
 		return resource.NonRetryableError(nil)
 	})
 }

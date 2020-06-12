@@ -9,7 +9,7 @@ import (
 )
 
 func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).RestyClient
+	client := m.(PaperspaceClient).HttpClient
 
 	log.Printf("[INFO] paperspace resourceScriptCreate Client ready")
 
@@ -76,7 +76,7 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).RestyClient
+	client := m.(PaperspaceClient).HttpClient
 
 	log.Printf("[INFO] paperspace resourceScriptRead Client ready")
 
@@ -125,7 +125,7 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 	SetResDataFrom(d, mp, "is_enabled", "isEnabled")
 	SetResDataFrom(d, mp, "run_once", "runOnce")
 
-	client = m.(PaperspaceClient).RestyClient
+	client = m.(PaperspaceClient).HttpClient
 
 	resp, err = client.R().
 		Get("/scripts/getScriptText?scriptId=" + d.Id())
@@ -158,7 +158,7 @@ func resourceScriptUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).RestyClient
+	client := m.(PaperspaceClient).HttpClient
 
 	log.Printf("[INFO] paperspace resourceScriptDelete Client ready")
 

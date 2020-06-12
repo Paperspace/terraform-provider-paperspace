@@ -10,7 +10,7 @@ import (
 )
 
 func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).RestyClient
+	client := m.(PaperspaceClient).HttpClient
 
 	log.Printf("[INFO] paperspace dataSourceTemplateRead Client ready")
 

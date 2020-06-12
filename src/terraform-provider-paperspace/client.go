@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"log"
+	"net/http"
 	"reflect"
+	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -50,93 +54,140 @@ func SetResData(d *schema.ResourceData, m map[string]interface{}, n string) {
 	SetResDataFrom(d, m, n, n)
 }
 
-type Config struct {
-	ApiKey  string
-	ApiHost string
+type ClientConfig struct {
+	APIKey  string
+	APIHost string
 	Region  string
 }
 
 type PaperspaceClient struct {
-	ApiKey      string
-	ApiHost     string
-	Region      string
-	RestyClient *resty.Client
+	APIKey     string
+	APIHost    string
+	Region     string
+	HttpClient *http.Client
 }
 
-func (c *Config) Client() (PaperspaceClient, error) {
+func (c *ClientConfig) Client() (PaperspaceClient, error) {
+	timeout := 10 * time.Second
+	hc := &http.Client{
+		Timeout: timeout,
+	}
 
-	restyClient := resty.New()
-
-	restyClient.SetDebug(true)
-
-	restyClient.OnBeforeRequest(func(c *resty.Client, req *resty.Request) error {
-		// Explore request object
-		log.Println("[INFO] Request Info:")
-		log.Println("[INFO] client.HostURL", c.HostURL)
-		log.Println("[INFO] client.Header", c.Header)
-		log.Println("[INFO] req.Method", req.Method)
-		log.Println("[INFO] req.URL", req.URL)
-		log.Println("[INFO] req.Body", req.Body)
-		log.Println("[INFO] req.AuthScheme", req.AuthScheme)
-		log.Println("[INFO] req.RawRequest", req.RawRequest)
-		log.Println("[INFO] req.Error", req.Error)
-
-		return nil
-	})
-
-	restyClient.OnAfterResponse(func(c *resty.Client, resp *resty.Response) error {
-
-		// Explore response object
-		log.Println("[INFO] Response Info:")
-		// log.Println("[INFO] Error      :", err)
-		log.Println("[INFO] Status Code:", resp.StatusCode())
-		log.Println("[INFO] Status     :", resp.Status())
-		log.Println("[INFO] Proto      :", resp.Proto())
-		log.Println("[INFO] Time       :", resp.Time())
-		log.Println("[INFO] Received At:", resp.ReceivedAt())
-		log.Println("[INFO] Body       :\n", resp)
-
-		// Explore trace info
-		log.Println("[INFO] Request Trace Info:")
-		ti := resp.Request.TraceInfo()
-		log.Println("[INFO] DNSLookup    :", ti.DNSLookup)
-		log.Println("[INFO] ConnTime     :", ti.ConnTime)
-		log.Println("[INFO] TCPConnTime  :", ti.TCPConnTime)
-		log.Println("[INFO] TLSHandshake :", ti.TLSHandshake)
-		log.Println("[INFO] ServerTime   :", ti.ServerTime)
-		log.Println("[INFO] ResponseTime :", ti.ResponseTime)
-		log.Println("[INFO] TotalTime    :", ti.TotalTime)
-		log.Println("[INFO] IsConnReused :", ti.IsConnReused)
-		log.Println("[INFO] IsConnWasIdle:", ti.IsConnWasIdle)
-		log.Println("[INFO] ConnIdleTime :", ti.ConnIdleTime)
-
-		return nil
-	})
-
-	restyClient.
-		SetHostURL(c.ApiHost).
-		SetHeader("x-api-key", c.ApiKey).
-		SetHeader("Accept", "application/json").
-		SetHeader("Content-Type", "application/json").
-		SetHeader("User-Agent", "terraform-provider-paperspace").
-		SetHeader("ps_client_name", "terraform-provider-paperspace")
+	rt := WithHeader(hc.Transport)
+	rt.Set("x-api-key", c.APIKey)
+	rt.Set("Accept", "application/json")
+	rt.Set("Content-Type", "application/json")
+	rt.Set("User-Agent", "terraform-provider-paperspace")
+	rt.Set("ps_client_name", "terraform-provider-paperspace")
+	hc.Transport = rt
 
 	client := PaperspaceClient{
-		ApiKey:      c.ApiKey,
-		ApiHost:     c.ApiHost,
-		Region:      c.Region,
-		RestyClient: restyClient,
+		APIKey:     c.APIKey,
+		APIHost:    c.APIHost,
+		Region:     c.Region,
+		HttpClient: hc,
 	}
 
 	return client, nil
 }
 
-func LogResponse(reqDesc string, resp *resty.Response, err error) {
+// from https://stackoverflow.com/questions/51325704/adding-a-default-http-header-in-go
+type withHeader struct {
+	http.Header
+	rt http.RoundTripper
+}
+
+// WithHeader effectively allows http.Client to have global headers
+func WithHeader(rt http.RoundTripper) withHeader {
+	if rt == nil {
+		rt = http.DefaultTransport
+	}
+
+	return withHeader{
+		Header: make(http.Header),
+		rt:     rt,
+	}
+}
+
+func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
+	for k, v := range h.Header {
+		req.Header[k] = v
+	}
+
+	return h.rt.RoundTrip(req)
+}
+
+// LogResponse logs http response fields
+func LogResponse(reqDesc string, resp *http.Response, err error) {
 	log.Printf("[INFO] Request: %v", reqDesc)
 	log.Printf("[INFO] Error: %v", err)
-	log.Printf("[INFO] Response Status Code: %v", resp.StatusCode())
-	log.Printf("[INFO] Response Status: %v", resp.Status())
-	log.Printf("[INFO] Response Time: %v", resp.Time())
-	log.Printf("[INFO] Response Received At: %v", resp.ReceivedAt())
+	log.Printf("[INFO] Response Status: %v", resp.Status)
 	log.Printf("[INFO] Response Body: %v", resp) // or resp.String() or string(resp.Body())
+}
+
+func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{}, statusCode *int, err error) {
+	url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", psc.APIHost, id)
+	log.Printf("[INFO] paperspace GetMachine, url: %s", url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf("[WARNING] Error constructing GetMachine request: %s", err)
+	}
+
+	resp, err := psc.HttpClient.Do(req)
+	defer resp.Body.Close()
+	statusCode = &resp.StatusCode
+	if err != nil {
+		LogResponse("GetMachine", resp, err)
+		return nil, statusCode, fmt.Errorf("[WARNING] Error sending GetMachine request: %s", err)
+	}
+
+	body = make(map[string]interface{})
+	err = json.NewDecoder(resp.Body).Decode(&body)
+	if err != nil {
+		LogResponse("GetMachine", resp, err)
+		return nil, statusCode, fmt.Errorf("[WARNING] Error decoding GetMachine response body: %s", err)
+	}
+
+	LogResponse("GetMachine", resp, err)
+	return body, statusCode, nil
+}
+
+func (psc *PaperspaceClient) CreateMachine(data []byte) (id *string, err error) {
+	url := fmt.Sprintf("%s/machines/createSingleMachinePublic", psc.APIHost)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		fmt.Errorf("[WARNING] Error constructing CreateMachine request: %s", err)
+	}
+
+	resp, err := psc.HttpClient.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		LogResponse("CreateMachine", resp, err)
+		return nil, fmt.Errorf("[WARNING] Error sending CreateMachine request: %s", err)
+	}
+
+	body := make(map[string]interface{})
+	err = json.NewDecoder(resp.Body).Decode(&body)
+	if err != nil {
+		LogResponse("CreateMachine", resp, err)
+		return nil, fmt.Errorf("[WARNING] Error decoding CreateMachine response body: %s", err)
+	}
+
+	if resp.StatusCode != 200 {
+		LogResponse("CreateMachine", resp, err)
+		return nil, fmt.Errorf("[WARNING] Error on CreateMachine: Response: %s", body)
+	}
+
+	id, _ = body["id"].(*string)
+
+	if *id == "" {
+		LogResponse("CreateMachine", resp, err)
+		return nil, fmt.Errorf("Error on CreateMachine: id not found")
+	}
+
+	log.Printf("[INFO] Success on CreateMachine: machine id: %v", id)
+
+	LogResponse("CreateMachine", resp, err)
+	return id, nil
 }
