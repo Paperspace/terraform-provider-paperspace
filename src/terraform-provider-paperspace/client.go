@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -55,24 +56,27 @@ func SetResData(d *schema.ResourceData, m map[string]interface{}, n string) {
 	SetResDataFrom(d, m, n, n)
 }
 
-// LogObjectResponse logs http response fields
-func LogObjectResponse(reqDesc string, reqURL *url.URL, resp *http.Response, body map[string]interface{}, err error) {
-	log.Printf("[INFO] Request: %v", reqDesc)
-	log.Printf("[INFO] Request URL: %v", reqURL)
-	log.Printf("[INFO] Response Status: %v", resp.Status)
-	log.Printf("[INFO] Response: %v", resp)
-	log.Printf("[INFO] Response Body: %s", body)
-	log.Printf("[INFO] Error: %v", err)
+func logHttpRequestConstruction(operationType string, url string, data *bytes.Buffer) {
+	log.Printf("Constructing %s request to url: %s, data: %v", operationType, url, data)
+}
+
+// logHttpResponseObject logs http response fields
+func logHttpResponseObject(reqURL *url.URL, resp *http.Response, body map[string]interface{}, err error) {
+	log.Printf("Request URL: %v", reqURL)
+	log.Printf("Response Status: %v", resp.Status)
+	log.Printf("Response: %v", resp)
+	log.Printf("Response Body: %s", body)
+	log.Printf("Error: %v", err)
 }
 
 // LogArrayResponse logs http response fields
 func LogArrayResponse(reqDesc string, reqURL *url.URL, resp *http.Response, body interface{}, err error) {
-	log.Printf("[INFO] Request: %v", reqDesc)
-	log.Printf("[INFO] Request URL: %v", reqURL)
-	log.Printf("[INFO] Response Status: %v", resp.Status)
-	log.Printf("[INFO] Response: %v", resp)
-	log.Printf("[INFO] Response Body: %s", body)
-	log.Printf("[INFO] Error: %v", err)
+	log.Printf("Request: %v", reqDesc)
+	log.Printf("Request URL: %v", reqURL)
+	log.Printf("Response Status: %v", resp.Status)
+	log.Printf("Response: %v", resp)
+	log.Printf("Response Body: %s", body)
+	log.Printf("Error: %v", err)
 }
 
 type ClientConfig struct {
@@ -138,32 +142,45 @@ func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
 	return h.transport.RoundTrip(req)
 }
 
-func (paperspaceClient *PaperspaceClient) GetMachine(id string) (body map[string]interface{}, err error) {
-	url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", paperspaceClient.APIHost, id)
-	req, err := http.NewRequest("GET", url, nil)
+func (paperspaceClient *PaperspaceClient) Request(operationType string, url string, data []byte) (body map[string]interface{}, statusCode int, err error) {
+	buf := bytes.NewBuffer(data)
+
+	logHttpRequestConstruction(operationType, url, buf)
+
+	req, err := http.NewRequest(operationType, url, buf)
 	if err != nil {
-		return nil, fmt.Errorf("Error constructing GetMachine request: %s", err)
+		return nil, 0, fmt.Errorf("Error constructing request: %s", err)
 	}
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Error completing GetMachine request: %s", err)
+		return nil, resp.StatusCode, fmt.Errorf("Error completing request: %s", err)
 	}
 	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding GetMachine response body: %s", err)
+		return nil, resp.StatusCode, fmt.Errorf("Error decoding response body: %s", err)
 	}
 
-	LogObjectResponse("GetMachine", req.URL, resp, body, err)
+	logHttpResponseObject(req.URL, resp, body, err)
 
-	if resp.StatusCode != 404 && resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Error on GetMachine response: statusCode: %d", resp.StatusCode)
+	return body, resp.StatusCode, nil
+}
+
+func (paperspaceClient *PaperspaceClient) GetMachine(id string) (body map[string]interface{}, err error) {
+	url := fmt.Sprintf("%s/machines/getMachinePublic?machineId=%s", paperspaceClient.APIHost, id)
+	body, statusCode, err := paperspaceClient.Request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if statusCode != 404 && statusCode != 200 {
+		return nil, fmt.Errorf("Error on GetMachine response: statusCode: %d", statusCode)
 	}
 
 	nextID, _ := body["id"].(string)
-	if resp.StatusCode == 404 || nextID == "" {
+	if statusCode == 404 || nextID == "" {
 		return nil, fmt.Errorf("Error on GetMachine: machine not found")
 	}
 
@@ -172,26 +189,12 @@ func (paperspaceClient *PaperspaceClient) GetMachine(id string) (body map[string
 
 func (paperspaceClient *PaperspaceClient) CreateMachine(data []byte) (id string, err error) {
 	url := fmt.Sprintf("%s/machines/createSingleMachinePublic", paperspaceClient.APIHost)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	body, statusCode, err := paperspaceClient.Request("POST", url, data)
 	if err != nil {
-		return "", fmt.Errorf("Error constructing CreateMachine request: %s", err)
+		return "", err
 	}
 
-	resp, err := paperspaceClient.HttpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("Error completing CreateMachine request: %s", err)
-	}
-	defer resp.Body.Close()
-
-	body := make(map[string]interface{})
-	err = json.NewDecoder(resp.Body).Decode(&body)
-	if err != nil {
-		return "", fmt.Errorf("Error decoding CreateMachine response body: %s", err)
-	}
-
-	LogObjectResponse("CreateMachine", req.URL, resp, body, err)
-
-	if resp.StatusCode != 200 {
+	if statusCode != 200 {
 		return "", fmt.Errorf("Error on CreateMachine: Response: %s", body)
 	}
 
@@ -206,21 +209,14 @@ func (paperspaceClient *PaperspaceClient) CreateMachine(data []byte) (id string,
 
 func (paperspaceClient *PaperspaceClient) DeleteMachine(id string) (err error) {
 	url := fmt.Sprintf("%s/machines/%s/destroyMachine", paperspaceClient.APIHost, id)
-	req, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		return fmt.Errorf("Error constructing DeleteMachine request: %s", err)
+	_, statusCode, err := paperspaceClient.Request("POST", url, nil)
+	// /destroyMachine returns the string "EOF" if it was successful, which can't be JSON-decoded
+	if err != nil && !strings.Contains(err.Error(), "EOF") {
+		return err
 	}
 
-	resp, err := paperspaceClient.HttpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("Error completing DeleteMachine request: %s", err)
-	}
-	defer resp.Body.Close()
-
-	LogObjectResponse("DeleteMachine", req.URL, resp, nil, err)
-
-	if resp.StatusCode != 204 {
-		return fmt.Errorf("Error deleting machine, statusCode: %d", resp.StatusCode)
+	if statusCode != 204 {
+		return fmt.Errorf("Error deleting machine")
 	}
 
 	return nil

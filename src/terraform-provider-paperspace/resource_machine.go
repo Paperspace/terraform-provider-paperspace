@@ -43,7 +43,6 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	body.AppendAsIfSet(d, "notification_email", "notificationEmail")
 
 	data, _ := json.MarshalIndent(body, "", "  ")
-	log.Println(string(data))
 
 	id, err := paperspaceClient.CreateMachine(data)
 	if err != nil {
