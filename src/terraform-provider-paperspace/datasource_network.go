@@ -84,6 +84,7 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace network: %s", err)
 	}
+	defer resp.Body.Close()
 
 	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace dataSourceNetworkRead StatusCode: %v", statusCode)

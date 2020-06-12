@@ -147,7 +147,7 @@ func (psc *PaperspaceClient) GetMachine(id string) (body map[string]interface{},
 
 	resp, err := psc.HttpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Error sending GetMachine request: %s", err)
+		return nil, fmt.Errorf("Error completing GetMachine request: %s", err)
 	}
 	defer resp.Body.Close()
 
@@ -179,7 +179,7 @@ func (psc *PaperspaceClient) CreateMachine(data []byte) (id string, err error) {
 
 	resp, err := psc.HttpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("Error sending CreateMachine request: %s", err)
+		return "", fmt.Errorf("Error completing CreateMachine request: %s", err)
 	}
 	defer resp.Body.Close()
 
@@ -213,7 +213,7 @@ func (psc *PaperspaceClient) DeleteMachine(id string) (err error) {
 
 	resp, err := psc.HttpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("Error sending DeleteMachine request: %s", err)
+		return fmt.Errorf("Error completing DeleteMachine request: %s", err)
 	}
 	defer resp.Body.Close()
 

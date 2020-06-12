@@ -76,6 +76,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace user: %s", err)
 	}
+	defer resp.Body.Close()
 
 	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace dataSourceUserRead StatusCode: %v", statusCode)

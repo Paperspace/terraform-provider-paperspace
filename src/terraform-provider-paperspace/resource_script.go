@@ -1,15 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).HttpClient
+	psc := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace resourceScriptCreate Client ready")
 
@@ -31,27 +33,30 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 	data, _ := json.MarshalIndent(body, "", "  ")
 	log.Println(string(data))
 
-	resp, err := client.R().
-		SetBody(body).
-		Post("/scripts/createScript")
+	url := fmt.Sprintf("%s/scripts/createScript", psc.APIHost)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return fmt.Errorf("Error constructing CreateScript request: %s", err)
+	}
 
+	resp, err := psc.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error creating paperspace script: %s", err)
 	}
+	defer resp.Body.Close()
 
-	statusCode := resp.StatusCode()
+	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace resourceScriptCreate StatusCode: %v", statusCode)
-	LogResponse("paperspace resourceScriptCreate", resp, err)
 	if statusCode != 200 {
-		return fmt.Errorf("Error creating paperspace script: Response: %s", resp.Body())
+		return fmt.Errorf("Error creating paperspace script: Response: %s", resp.Body)
 	}
 
 	var f interface{}
-	err = json.Unmarshal(resp.Body(), &f)
-
+	err = json.NewDecoder(resp.Body).Decode(&f)
 	if err != nil {
-		return fmt.Errorf("Error unmarshalling paperspace script create response: %s", err)
+		return fmt.Errorf("Error decoding GetScript response body: %s", err)
 	}
+	LogArrayResponse("paperspace dataSourceGetScript", req.URL, resp, f, err)
 
 	mp := f.(map[string]interface{})
 	id, _ := mp["id"].(string)
@@ -76,37 +81,42 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).HttpClient
+	psc := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace resourceScriptRead Client ready")
 
-	resp, err := client.R().
-		Get("/scripts/getScript?scriptId=" + d.Id())
-
+	url := fmt.Sprintf("%s/scripts/getScript?scriptId=%s", psc.APIHost, d.Id())
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return fmt.Errorf("Error reading paperspace script: %s", err)
+		return fmt.Errorf("Error constructing GetScript request: %s", err)
 	}
 
-	statusCode := resp.StatusCode()
+	resp, err := psc.HttpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("Error completing GetScript request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace resourceScriptRead StatusCode: %v", statusCode)
-	LogResponse("paperspace resourceScriptCreate", resp, err)
 	if statusCode == 404 {
 		log.Printf("[INFO] paperspace resourceScriptRead scriptId not found; removing resource %s", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace script: Response: %s", resp.Body())
-	}
+	var body interface{}
+	json.NewDecoder(resp.Body).Decode(&body)
+	LogArrayResponse("paperspace resourceScriptCreate", req.URL, resp, body, err)
 
-	var f interface{}
-	err = json.Unmarshal(resp.Body(), &f)
+	if statusCode != 200 {
+		return fmt.Errorf("Error reading paperspace script: Response: %s", body)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling paperspace script read response: %s", err)
 	}
 
-	mp := f.(map[string]interface{})
+	mp := body.(map[string]interface{})
 	id, _ := mp["id"].(string)
 
 	if id == "" {
@@ -125,27 +135,34 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 	SetResDataFrom(d, mp, "is_enabled", "isEnabled")
 	SetResDataFrom(d, mp, "run_once", "runOnce")
 
-	client = m.(PaperspaceClient).HttpClient
+	url = fmt.Sprintf("%s/scripts/getScriptText?scriptId=%s", psc.APIHost, d.Id())
+	req, err = http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("Error constructing GetScriptText request: %s", err)
+	}
 
-	resp, err = client.R().
-		Get("/scripts/getScriptText?scriptId=" + d.Id())
-
+	resp, err = psc.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace script text: %s", err)
 	}
+	defer resp.Body.Close()
 
-	statusCode = resp.StatusCode()
+	statusCode = resp.StatusCode
 	log.Printf("[INFO] paperspace resourceScriptRead text StatusCode: %v", statusCode)
-	LogResponse("paperspace resourceScriptCreate", resp, err)
+
+	json.NewDecoder(resp.Body).Decode(&body)
+	s, err := json.Marshal(body)
+	LogArrayResponse("paperspace resourceScriptCreate", req.URL, resp, body, err)
+
 	if statusCode == 404 {
 		log.Printf("[INFO] paperspace resourceScriptRead text scriptId not found")
 		return nil
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace script text: Response: %s", resp.Body())
+		return fmt.Errorf("Error reading paperspace script text: Response: %s", body)
 	}
 
-	d.Set("script_text", resp.Body())
+	d.Set("script_text", s)
 
 	return nil
 }
@@ -158,22 +175,26 @@ func resourceScriptUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptDelete(d *schema.ResourceData, m interface{}) error {
-	client := m.(PaperspaceClient).HttpClient
+	psc := m.(PaperspaceClient)
 
 	log.Printf("[INFO] paperspace resourceScriptDelete Client ready")
 
-	resp, err := client.R().
-		Post("/scripts/" + d.Id() + "/destroy")
-
+	url := fmt.Sprintf("%s/scripts/%s/destroy", psc.APIHost, d.Id())
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return fmt.Errorf("Error constructing DeleteScript request: %s", err)
+	}
+	resp, err := psc.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error deleting paperspace script: %s", err)
 	}
+	defer resp.Body.Close()
 
-	statusCode := resp.StatusCode()
+	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace resourceScriptDelete StatusCode: %v", statusCode)
-	LogResponse("paperspace resourceScriptDelete", resp, err)
+	LogArrayResponse("paperspace resourceScriptDelete", req.URL, resp, nil, err)
 	if statusCode != 204 && statusCode != 404 {
-		return fmt.Errorf("Error deleting paperspace script: Response: %s", resp.Body())
+		return fmt.Errorf("Error deleting paperspace script: Response: %s", resp.Body)
 	}
 	if statusCode == 204 {
 		log.Printf("[INFO] paperspace resourceScriptDelete script deleted successfully, StatusCode: %v", statusCode)
