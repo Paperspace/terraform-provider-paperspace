@@ -13,6 +13,7 @@
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
-# Terraform
+# Terraform for in-directory testing
 .terraform
 terraform.tfstate
+crash.log
