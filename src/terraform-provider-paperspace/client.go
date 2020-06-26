@@ -60,22 +60,17 @@ func logHttpRequestConstruction(operationType string, url string, data *bytes.Bu
 	log.Printf("Constructing %s request to url: %s, data: %v", operationType, url, data)
 }
 
-// logHttpResponseObject logs http response fields
-func logHttpResponseObject(reqURL *url.URL, resp *http.Response, body map[string]interface{}, err error) {
-	log.Printf("Request URL: %v", reqURL)
-	log.Printf("Response Status: %v", resp.Status)
-	log.Printf("Response: %v", resp)
-	log.Printf("Response Body: %s", body)
-	log.Printf("Error: %v", err)
-}
-
-// LogArrayResponse logs http response fields
-func LogHttpResponseArray(reqDesc string, reqURL *url.URL, resp *http.Response, body interface{}, err error) {
+// LogHttpResponse logs http response fields
+func LogHttpResponse(reqDesc string, reqURL *url.URL, resp *http.Response, body interface{}, err error) {
+	jsonBody, err2 := json.Marshal(body)
+	if err2 != nil {
+		log.Printf("Error unmarshaling response body: %v", err2)
+	}
 	log.Printf("Request: %v", reqDesc)
 	log.Printf("Request URL: %v", reqURL)
 	log.Printf("Response Status: %v", resp.Status)
 	log.Printf("Response: %v", resp)
-	log.Printf("Response Body: %s", body)
+	log.Printf("Response Body: %s", jsonBody)
 	log.Printf("Error: %v", err)
 }
 
@@ -163,7 +158,7 @@ func (paperspaceClient *PaperspaceClient) Request(operationType string, url stri
 		return nil, resp.StatusCode, fmt.Errorf("Error decoding response body: %s", err)
 	}
 
-	logHttpResponseObject(req.URL, resp, body, err)
+	LogHttpResponse("", req.URL, resp, body, err)
 
 	return body, resp.StatusCode, nil
 }
@@ -195,7 +190,12 @@ func (paperspaceClient *PaperspaceClient) CreateMachine(data []byte) (id string,
 	}
 
 	if statusCode != 200 {
-		return "", fmt.Errorf("Error on CreateMachine: Response: %s", body)
+		jsonBody, err := json.Marshal(body)
+		if err != nil {
+			return "", fmt.Errorf("Error unmarshaling response body: %v", err)
+		}
+
+		return "", fmt.Errorf("Error on CreateMachine: Response: %s", jsonBody)
 	}
 
 	id, _ = body["id"].(string)
