@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -62,15 +63,11 @@ func logHttpRequestConstruction(operationType string, url string, data *bytes.Bu
 
 // LogHttpResponse logs http response fields
 func LogHttpResponse(reqDesc string, reqURL *url.URL, resp *http.Response, body interface{}, err error) {
-	jsonBody, err2 := json.Marshal(body)
-	if err2 != nil {
-		log.Printf("Error unmarshaling response body: %v", err2)
-	}
 	log.Printf("Request: %v", reqDesc)
 	log.Printf("Request URL: %v", reqURL)
 	log.Printf("Response Status: %v", resp.Status)
 	log.Printf("Response: %v", resp)
-	log.Printf("Response Body: %s", jsonBody)
+	log.Printf("Response Body: %s", spew.Sdump(body))
 	log.Printf("Error: %v", err)
 }
 
@@ -195,7 +192,7 @@ func (paperspaceClient *PaperspaceClient) CreateMachine(data []byte) (id string,
 			return "", fmt.Errorf("Error unmarshaling response body: %v", err)
 		}
 
-		return "", fmt.Errorf("Error on CreateMachine: Response: %s", jsonBody)
+		return "", fmt.Errorf("Error on CreateMachine: Status Code %d, Response Body: %s", statusCode, jsonBody)
 	}
 
 	id, _ = body["id"].(string)
