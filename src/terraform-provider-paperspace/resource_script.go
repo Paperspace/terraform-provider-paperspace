@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -38,6 +40,11 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error constructing CreateScript request: %s", err)
 	}
+	requestDump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		return fmt.Errorf("Error constructing CreateScript request: %s", err)
+	}
+	log.Print("[INFO] Request:", string(requestDump))
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
@@ -48,7 +55,8 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 	statusCode := resp.StatusCode
 	log.Printf("[INFO] paperspace resourceScriptCreate StatusCode: %v", statusCode)
 	if statusCode != 200 {
-		return fmt.Errorf("Error creating paperspace script: Response: %s", resp.Body)
+		responseDump, _ := httputil.DumpResponse(resp, true)
+		return fmt.Errorf("Error reading paperspace script: Response: %s", string(responseDump))
 	}
 
 	var f interface{}
@@ -91,6 +99,7 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error constructing GetScript request: %s", err)
 	}
 
+	spew.Sdump(paperspaceClient)
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error completing GetScript request: %s", err)

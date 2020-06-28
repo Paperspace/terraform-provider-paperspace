@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -71,6 +72,11 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error constructing GetUsers request: %s", err)
 	}
+	requestDump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		return fmt.Errorf("Error constructing GetUsers request: %s", err)
+	}
+	log.Print("[INFO] Request:", string(requestDump))
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
@@ -84,7 +90,8 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace user: users not found")
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace user: Response: %s", resp.Body)
+		responseDump, _ := httputil.DumpResponse(resp, true)
+		return fmt.Errorf("Error reading paperspace user: Response: %s", string(responseDump))
 	}
 
 	var f interface{}
@@ -92,7 +99,7 @@ func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error decoding GetUsers response body: %s", err)
 	}
-	LogHttpResponse("paperspace dataSourceTemplateRead", req.URL, resp, f, err)
+	LogHttpResponse("paperspace dataSourceUserRead", req.URL, resp, f, err)
 
 	mpa := f.([]interface{})
 	if len(mpa) > 1 {

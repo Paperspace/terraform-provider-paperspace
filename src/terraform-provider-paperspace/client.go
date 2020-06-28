@@ -98,12 +98,16 @@ func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient, err error) {
 	transport.Set("ps_client_name", "terraform-provider-paperspace")
 	client.Transport = transport
 
+	log.Printf("[DEBUG] Paperspace client transport %v", transport)
+
 	paperspaceClient = PaperspaceClient{
 		APIKey:     c.APIKey,
 		APIHost:    c.APIHost,
 		Region:     c.Region,
 		HttpClient: client,
 	}
+
+	log.Printf("[DEBUG] Paperspace client config %v", paperspaceClient)
 
 	return paperspaceClient, nil
 }

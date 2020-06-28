@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -87,7 +89,13 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error constructing GetTemplates request: %s", err)
 	}
+	requestDump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		return fmt.Errorf("Error constructing GetTemplates request: %s", err)
+	}
+	log.Print("[INFO] Request:", string(requestDump))
 
+	spew.Sdump(paperspaceClient)
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace template: %s", err)
@@ -100,7 +108,8 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace template: templates not found")
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace template: Response: %s", resp.Body)
+		responseDump, _ := httputil.DumpResponse(resp, true)
+		return fmt.Errorf("Error reading paperspace template: Response: %s", string(responseDump))
 	}
 
 	var f interface{}
