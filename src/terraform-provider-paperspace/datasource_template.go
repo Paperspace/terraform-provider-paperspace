@@ -8,7 +8,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -95,7 +94,6 @@ func dataSourceTemplateRead(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Print("[INFO] Request:", string(requestDump))
 
-	spew.Sdump(paperspaceClient)
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error reading paperspace template: %s", err)

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -99,7 +98,6 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error constructing GetScript request: %s", err)
 	}
 
-	spew.Sdump(paperspaceClient)
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error completing GetScript request: %s", err)
