@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -79,6 +80,11 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error constructing GetNetworks request: %s", err)
 	}
+	requestDump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		return fmt.Errorf("Error constructing GetNetwork request: %s", err)
+	}
+	log.Print("[INFO] Request:", string(requestDump))
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
@@ -92,7 +98,8 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Error reading paperspace network: networks not found")
 	}
 	if statusCode != 200 {
-		return fmt.Errorf("Error reading paperspace network: Response: %s", resp.Body)
+		responseDump, _ := httputil.DumpResponse(resp, true)
+		return fmt.Errorf("Error reading paperspace network: Response: %s", string(responseDump))
 	}
 
 	var f interface{}
