@@ -167,7 +167,6 @@ func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url st
 			return res, err
 		}
 
-		print(string(data))
 		body = bytes.NewReader(data)
 	}
 
