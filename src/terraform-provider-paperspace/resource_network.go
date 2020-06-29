@@ -1,20 +1,21 @@
 package main
 
 import (
-	"crypto/rand"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+var chars = []rune("0123456789abcdefghijklmnopqrstuvwxyz")
 
 func randSeq(n int) string {
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = chars[rand.Intn(len(chars))]
 	}
 	return string(b)
 }
@@ -59,6 +60,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	if err := paperspaceClient.CreateNetwork(teamID, createNetworkParams); err != nil {
 		return fmt.Errorf("Error creating private network: %s", err)
 	}
+	d.SetId(name)
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		paperspaceClient := m.(PaperspaceClient)
@@ -70,7 +72,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 			return resource.RetryableError(fmt.Errorf("Error creating private network: %s", err))
 		}
 		for _, network := range networks {
-			if network.Handle == d.Id() {
+			if network.Name == d.Id() {
 				return resource.NonRetryableError(resourceNetworkRead(d, m))
 			}
 		}

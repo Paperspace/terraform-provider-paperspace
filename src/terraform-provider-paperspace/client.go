@@ -291,7 +291,7 @@ func (paperspaceClient *PaperspaceClient) GetTeamNetworks(teamID int) ([]Network
 	_, err := paperspaceClient.RequestInterface("GET", url, nil, &networkResponses)
 
 	for _, networkResponse := range networkResponses {
-		networks = append(networks, networkResponse.Network)
+		networks = append(networks, networkResponse.Network) // START HERE: return name as well
 	}
 
 	return networks, err
