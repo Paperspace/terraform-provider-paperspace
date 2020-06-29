@@ -1,11 +1,29 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
+	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
+func generateNetworkHandle() string {
+	rand.Seed(time.Now().UnixNano())
+
+	return fmt.Sprint("ne" + randSeq(7))
+}
 
 func updateNetworkSchema(d *schema.ResourceData, network Network) {
 	d.Set("network", network.Network)
@@ -14,10 +32,6 @@ func updateNetworkSchema(d *schema.ResourceData, network Network) {
 
 func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	paperspaceClient := m.(PaperspaceClient)
-	name, ok := d.Get("name").(string)
-	if !ok {
-		return fmt.Errorf("name is not a string")
-	}
 	teamID, ok := d.Get("team_id").(int)
 	if !ok {
 		return fmt.Errorf("team_id is not an int")
@@ -28,10 +42,19 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Region %s not found", paperspaceClient.Region)
 	}
 
+	currentNetworks, err := paperspaceClient.GetTeamNetworks(teamID)
+	if err != nil {
+		return fmt.Errorf("Error getting current networks: %s", err)
+	}
+	spew.Sdump(currentNetworks)
+
+	name := generateNetworkHandle()
+
 	createNetworkParams := CreateNetworkParams{
 		Name:     name,
 		RegionId: regionId,
 	}
+	spew.Sdump(createNetworkParams)
 
 	if err := paperspaceClient.CreateNetwork(teamID, createNetworkParams); err != nil {
 		return fmt.Errorf("Error creating private network: %s", err)
