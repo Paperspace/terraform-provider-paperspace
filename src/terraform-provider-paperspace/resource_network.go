@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -68,7 +69,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 			return resource.RetryableError(fmt.Errorf("Error creating private network: %s", err))
 		}
 
-		d.SetId(string(namedNetwork.Network.ID))
+		d.SetId(strconv.Itoa(namedNetwork.Network.ID))
 		return resource.NonRetryableError(resourceNetworkRead(d, m))
 	})
 }
@@ -86,7 +87,7 @@ func resourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(string(namedNetwork.Network.ID))
+	d.SetId(strconv.Itoa(namedNetwork.Network.ID))
 	updateNetworkSchema(d, namedNetwork.Network, namedNetwork.Name)
 
 	return nil

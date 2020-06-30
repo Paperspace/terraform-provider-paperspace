@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -316,7 +317,7 @@ func (paperspaceClient *PaperspaceClient) GetTeamNamedNetwork(teamID int, name s
 		}
 	}
 
-	return nil, fmt.Errorf("Error getting private network: %s", name)
+	return nil, fmt.Errorf("Error getting private network by name: %s", name)
 }
 
 func (paperspaceClient *PaperspaceClient) GetTeamNamedNetworkById(teamID int, id string) (*NamedNetwork, error) {
@@ -326,10 +327,10 @@ func (paperspaceClient *PaperspaceClient) GetTeamNamedNetworkById(teamID int, id
 	}
 
 	for _, namedNetwork := range namedNetworks {
-		if string(namedNetwork.Network.ID) == id {
+		if strconv.Itoa(namedNetwork.Network.ID) == id {
 			return &namedNetwork, nil
 		}
 	}
 
-	return nil, fmt.Errorf("Error getting private network: %s", id)
+	return nil, fmt.Errorf("Error getting private network by id: %s", id)
 }
