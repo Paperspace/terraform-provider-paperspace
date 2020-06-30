@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -24,7 +22,7 @@ func randSeq(n int) string {
 func networkHandle() string {
 	rand.Seed(time.Now().UnixNano())
 
-	return fmt.Sprint("ne" + randSeq(7))
+	return fmt.Sprint("managed_network_" + randSeq(7))
 }
 
 func updateNetworkSchema(d *schema.ResourceData, network Network, name string) {
@@ -54,7 +52,6 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		Name:     name,
 		RegionId: regionId,
 	}
-	spew.Sdump(createNamedNetworkParams)
 
 	if err := paperspaceClient.CreateTeamNamedNetwork(teamID, createNamedNetworkParams); err != nil {
 		return fmt.Errorf("Error creating private network: %s", err)
@@ -81,22 +78,16 @@ func resourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 	if !ok {
 		return fmt.Errorf("team_id is not an int")
 	}
-	name, ok := d.Get("name").(string)
-	if !ok {
-		return fmt.Errorf("name is not a string")
-	}
 
-	namedNetwork, err := paperspaceClient.GetTeamNamedNetwork(teamID, name)
+	namedNetwork, err := paperspaceClient.GetTeamNamedNetworkById(teamID, d.Id())
 	if err != nil {
 		d.SetId("")
 		return err
 	}
-	log.Printf("!! bob")
 
 	d.SetId(string(namedNetwork.Network.ID))
-	updateNetworkSchema(d, namedNetwork.Network, name)
+	updateNetworkSchema(d, namedNetwork.Network, namedNetwork.Name)
 
-	spew.Sdump(d)
 	return nil
 }
 
@@ -146,9 +137,9 @@ func resourceNetwork() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			// name is not on the network schema but rather part of what i'm calling the
-			// named network response, which comes from getNetworks. this is a joined
-			// response between the network and network_owners table, to include name.
+			// name is not on the network schema but rather part of what we're calling here
+			// the "named network response", which comes from /getNetworks and includes the
+			// network and its name as joined with the network_owners table.
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,

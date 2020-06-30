@@ -172,6 +172,9 @@ func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url st
 		body = bytes.NewReader(data)
 	}
 
+	buf := bytes.NewBuffer(data)
+	logHttpRequestConstruction(method, url, buf)
+
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
@@ -192,12 +195,12 @@ func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url st
 	return resp, nil
 }
 
-func (paperspaceClient *PaperspaceClient) Request(operationType string, url string, data []byte) (body map[string]interface{}, statusCode int, err error) {
+func (paperspaceClient *PaperspaceClient) Request(method string, url string, data []byte) (body map[string]interface{}, statusCode int, err error) {
 	buf := bytes.NewBuffer(data)
 
-	logHttpRequestConstruction(operationType, url, buf)
+	logHttpRequestConstruction(method, url, buf)
 
-	req, err := http.NewRequest(operationType, url, buf)
+	req, err := http.NewRequest(method, url, buf)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Error constructing request: %s", err)
 	}
@@ -282,7 +285,7 @@ func (paperspaceClient *PaperspaceClient) CreateTeamNamedNetwork(teamID int, cre
 	url := fmt.Sprintf("%s/teams/%d/createPrivateNetwork", paperspaceClient.APIHost, teamID)
 
 	_, err := paperspaceClient.RequestInterface("POST", url, createNamedNetworkParams, &network)
-	if strings.Contains(err.Error(), "EOF") {
+	if err != nil && strings.Contains(err.Error(), "EOF") {
 		return nil
 	}
 	return err
@@ -293,7 +296,6 @@ func (paperspaceClient *PaperspaceClient) GetTeamNamedNetworks(teamID int) ([]Na
 	url := fmt.Sprintf("%s/teams/%d/getNetworks", paperspaceClient.APIHost, teamID)
 
 	_, err := paperspaceClient.RequestInterface("GET", url, nil, &namedNetworks)
-	spew.Sdump(namedNetworks)
 
 	return namedNetworks, err
 }
@@ -306,11 +308,24 @@ func (paperspaceClient *PaperspaceClient) GetTeamNamedNetwork(teamID int, name s
 
 	for _, namedNetwork := range namedNetworks {
 		if namedNetwork.Name == name {
-			log.Print("FOUND NAMED NETWORK")
-			spew.Sdump(namedNetwork)
 			return &namedNetwork, nil
 		}
 	}
 
 	return nil, fmt.Errorf("Error getting private network: %s", name)
+}
+
+func (paperspaceClient *PaperspaceClient) GetTeamNamedNetworkById(teamID int, id string) (*NamedNetwork, error) {
+	namedNetworks, err := paperspaceClient.GetTeamNamedNetworks(teamID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, namedNetwork := range namedNetworks {
+		if string(namedNetwork.Network.ID) == id {
+			return &namedNetwork, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Error getting private network: %s", id)
 }
