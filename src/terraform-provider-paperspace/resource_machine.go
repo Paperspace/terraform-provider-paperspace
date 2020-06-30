@@ -34,7 +34,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	body.AppendAsIfSet(d, "team_id", "teamId")
 	body.AppendAsIfSet(d, "script_id", "scriptId")
 	body.AppendAsIfSet(d, "network_id", "networkId")
-	body.AppendAsIfSet(d, "cluster", "cluster")
+	body.AppendAsIfSet(d, "cluster_id", "clusterId")
 
 	// fields not tested when this project was picked back up for https://github.com/Paperspace/terraform-provider-paperspace/pull/3
 	body.AppendIfSet(d, "email")
@@ -88,7 +88,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 		SetResDataFrom(d, body, "team_id", "teamId")
 		SetResDataFrom(d, body, "script_id", "scriptId")
 		SetResDataFrom(d, body, "dt_last_run", "dtLastRun")
-		SetResDataFrom(d, body, "cluster", "cluster")
+		SetResDataFrom(d, body, "cluster_id", "clusterId")
 
 		d.SetId(id)
 
@@ -130,7 +130,7 @@ func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
 	SetResDataFrom(d, mp, "team_id", "teamId")
 	SetResDataFrom(d, mp, "script_id", "scriptId")
 	SetResDataFrom(d, mp, "dt_last_run", "dtLastRun")
-	SetResDataFrom(d, mp, "cluster", "cluster")
+	SetResDataFrom(d, mp, "cluster_id", "clusterId")
 
 	return nil
 }
@@ -313,7 +313,7 @@ func resourceMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster": &schema.Schema{
+			"cluster_id": &schema.Schema{
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
