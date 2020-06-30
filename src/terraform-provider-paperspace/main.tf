@@ -37,3 +37,7 @@ resource "paperspace_machine" "my-machine-1" {
   team_id = data.paperspace_user.my-user-1.team_id
   script_id = paperspace_script.my-script-1.id // optional, remove for no script
 }
+
+resource "paperspace_network" "network" {
+  team_id = 00000 // change to your actual integer team id
+}
