@@ -48,7 +48,6 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.SetId(id)
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		body, err := paperspaceClient.GetMachine(id)
@@ -88,6 +87,8 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 		SetResDataFrom(d, body, "team_id", "teamId")
 		SetResDataFrom(d, body, "script_id", "scriptId")
 		SetResDataFrom(d, body, "dt_last_run", "dtLastRun")
+
+		d.SetId(id)
 
 		return resource.NonRetryableError(resourceMachineRead(d, m))
 	})
