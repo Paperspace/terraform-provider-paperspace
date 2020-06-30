@@ -77,7 +77,7 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 	url := fmt.Sprintf("%s/networks/getNetworks%s", paperspaceClient.APIHost, queryStr)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return fmt.Errorf("Error constructing GetNetworks request: %s", err)
+		return fmt.Errorf("Error constructing GetTeamNamedNetworks request: %s", err)
 	}
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
@@ -98,7 +98,7 @@ func dataSourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 	var f interface{}
 	err = json.NewDecoder(resp.Body).Decode(&f)
 	if err != nil {
-		return fmt.Errorf("Error decoding GetNetworks response body: %s", err)
+		return fmt.Errorf("Error decoding GetTeamNamedNetworks response body: %s", err)
 	}
 	LogHttpResponse("paperspace dataSourceNetworkRead", req.URL, resp, f, err)
 

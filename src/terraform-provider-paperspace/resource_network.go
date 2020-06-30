@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -20,15 +21,19 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func generateNetworkHandle() string {
+func networkHandle() string {
 	rand.Seed(time.Now().UnixNano())
 
 	return fmt.Sprint("ne" + randSeq(7))
 }
 
-func updateNetworkSchema(d *schema.ResourceData, network Network) {
-	d.Set("network", network.Network)
+func updateNetworkSchema(d *schema.ResourceData, network Network, name string) {
+	d.Set("handle", network.Handle)
+	d.Set("is_taken", network.IsTaken)
+	d.Set("name", name)
 	d.Set("netmask", network.Netmask)
+	d.Set("network", network.Network)
+	d.Set("vlan_id", network.VlanID)
 }
 
 func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
@@ -43,41 +48,30 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("Region %s not found", paperspaceClient.Region)
 	}
 
-	currentNetworks, err := paperspaceClient.GetTeamNetworks(teamID)
-	if err != nil {
-		return fmt.Errorf("Error getting current networks: %s", err)
-	}
-	spew.Sdump(currentNetworks)
+	name := networkHandle()
 
-	name := generateNetworkHandle()
-
-	createNetworkParams := CreateNetworkParams{
+	createNamedNetworkParams := CreateTeamNamedNetworkParams{
 		Name:     name,
 		RegionId: regionId,
 	}
-	spew.Sdump(createNetworkParams)
+	spew.Sdump(createNamedNetworkParams)
 
-	if err := paperspaceClient.CreateNetwork(teamID, createNetworkParams); err != nil {
+	if err := paperspaceClient.CreateTeamNamedNetwork(teamID, createNamedNetworkParams); err != nil {
 		return fmt.Errorf("Error creating private network: %s", err)
 	}
-	d.SetId(name)
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		paperspaceClient := m.(PaperspaceClient)
 
 		// XXX: potential race condition for multiple networks created with the name concurrently
 		// Add sync API response to API
-		networks, err := paperspaceClient.GetTeamNetworks(teamID)
+		namedNetwork, err := paperspaceClient.GetTeamNamedNetwork(teamID, name)
 		if err != nil {
 			return resource.RetryableError(fmt.Errorf("Error creating private network: %s", err))
 		}
-		for _, network := range networks {
-			if network.Name == d.Id() {
-				return resource.NonRetryableError(resourceNetworkRead(d, m))
-			}
-		}
 
-		return resource.RetryableError(fmt.Errorf("Network not found"))
+		d.SetId(string(namedNetwork.Network.ID))
+		return resource.NonRetryableError(resourceNetworkRead(d, m))
 	})
 }
 
@@ -87,27 +81,32 @@ func resourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 	if !ok {
 		return fmt.Errorf("team_id is not an int")
 	}
+	name, ok := d.Get("name").(string)
+	if !ok {
+		return fmt.Errorf("name is not a string")
+	}
 
-	networks, err := paperspaceClient.GetTeamNetworks(teamID)
+	namedNetwork, err := paperspaceClient.GetTeamNamedNetwork(teamID, name)
 	if err != nil {
-		return fmt.Errorf("Error creating private network: %s", err)
+		d.SetId("")
+		return err
 	}
+	log.Printf("!! bob")
 
-	for _, network := range networks {
-		if network.Handle == d.Id() {
-			updateNetworkSchema(d, network)
-			return nil
-		}
-	}
+	d.SetId(string(namedNetwork.Network.ID))
+	updateNetworkSchema(d, namedNetwork.Network, name)
 
+	spew.Sdump(d)
 	return nil
 }
 
 func resourceNetworkUpdate(d *schema.ResourceData, m interface{}) error {
+	// TODO: implement; api doesn't exist yet
 	return resourceNetworkRead(d, m)
 }
 
 func resourceNetworkDelete(d *schema.ResourceData, m interface{}) error {
+	// TODO: implement; api doesn't exist yet
 	d.SetId("")
 	return nil
 }
@@ -123,13 +122,36 @@ func resourceNetwork() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"team_id": &schema.Schema{
 				Type:     schema.TypeInt,
 				Required: true,
+			},
+			"handle": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"is_taken": &schema.Schema{
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"netmask": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"network": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vlan_id": &schema.Schema{
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			// name is not on the network schema but rather part of what i'm calling the
+			// named network response, which comes from getNetworks. this is a joined
+			// response between the network and network_owners table, to include name.
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
