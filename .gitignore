@@ -17,3 +17,7 @@
 .terraform
 terraform.tfstate
 crash.log
+*terraform.tfstate.*.backup
+
+# Mac
+.DS_Store

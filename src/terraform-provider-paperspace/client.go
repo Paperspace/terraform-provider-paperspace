@@ -15,6 +15,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+var RegionMap = map[string]int{
+	"East Coast (NY2)": 1,
+	"West Coast (CA1)": 2,
+	"Europe (AMS1)":    3,
+}
+
+type Network struct {
+	ID      int    `json:"id"`
+	Handle  string `json:"handle"`
+	IsTaken bool   `json:"isTaken"`
+	Network string `json:"network"`
+	Netmask string `json:"netmask"`
+	VlanID  int    `json:"vlanId"`
+}
+
+type NamedNetwork struct {
+	Name    string  `json:"name"`
+	Network Network `json:"network"`
+}
+
+type CreateTeamNamedNetworkParams struct {
+	Name     string `json:"name"`
+	RegionId int    `json:"regionId"`
+}
+
 type MapIf map[string]interface{}
 
 func (m *MapIf) Append(d *schema.ResourceData, k string) {
@@ -138,12 +163,48 @@ func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
 	return h.transport.RoundTrip(req)
 }
 
-func (paperspaceClient *PaperspaceClient) Request(operationType string, url string, data []byte) (body map[string]interface{}, statusCode int, err error) {
+func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url string, params, result interface{}) (res *http.Response, err error) {
+	var data []byte
+	body := bytes.NewReader(make([]byte, 0))
+
+	if params != nil {
+		data, err = json.Marshal(params)
+		if err != nil {
+			return res, err
+		}
+
+		body = bytes.NewReader(data)
+	}
+
+	buf := bytes.NewBuffer(data)
+	logHttpRequestConstruction(method, url, buf)
+
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := paperspaceClient.HttpClient.Do(req)
+	if err != nil {
+		return resp, err
+	}
+	defer resp.Body.Close()
+
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return resp, err
+	}
+
+	LogHttpResponse("", req.URL, resp, result, err)
+	return resp, nil
+}
+
+func (paperspaceClient *PaperspaceClient) Request(method string, url string, data []byte) (body map[string]interface{}, statusCode int, err error) {
 	buf := bytes.NewBuffer(data)
 
-	logHttpRequestConstruction(operationType, url, buf)
+	logHttpRequestConstruction(method, url, buf)
 
-	req, err := http.NewRequest(operationType, url, buf)
+	req, err := http.NewRequest(method, url, buf)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Error constructing request: %s", err)
 	}
@@ -221,4 +282,54 @@ func (paperspaceClient *PaperspaceClient) DeleteMachine(id string) (err error) {
 	}
 
 	return nil
+}
+
+func (paperspaceClient *PaperspaceClient) CreateTeamNamedNetwork(teamID int, createNamedNetworkParams CreateTeamNamedNetworkParams) error {
+	var network Network
+	url := fmt.Sprintf("%s/teams/%d/createPrivateNetwork", paperspaceClient.APIHost, teamID)
+
+	_, err := paperspaceClient.RequestInterface("POST", url, createNamedNetworkParams, &network)
+	if err != nil && strings.Contains(err.Error(), "EOF") {
+		return nil
+	}
+	return err
+}
+
+func (paperspaceClient *PaperspaceClient) GetTeamNamedNetworks(teamID int) ([]NamedNetwork, error) {
+	var namedNetworks []NamedNetwork
+	url := fmt.Sprintf("%s/teams/%d/getNetworks", paperspaceClient.APIHost, teamID)
+
+	_, err := paperspaceClient.RequestInterface("GET", url, nil, &namedNetworks)
+
+	return namedNetworks, err
+}
+
+func (paperspaceClient *PaperspaceClient) GetTeamNamedNetwork(teamID int, name string) (*NamedNetwork, error) {
+	namedNetworks, err := paperspaceClient.GetTeamNamedNetworks(teamID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, namedNetwork := range namedNetworks {
+		if namedNetwork.Name == name {
+			return &namedNetwork, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Error getting private network: %s", name)
+}
+
+func (paperspaceClient *PaperspaceClient) GetTeamNamedNetworkById(teamID int, id string) (*NamedNetwork, error) {
+	namedNetworks, err := paperspaceClient.GetTeamNamedNetworks(teamID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, namedNetwork := range namedNetworks {
+		if string(namedNetwork.Network.ID) == id {
+			return &namedNetwork, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Error getting private network: %s", id)
 }

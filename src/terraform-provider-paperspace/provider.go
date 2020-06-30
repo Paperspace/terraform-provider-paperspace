@@ -29,6 +29,7 @@ func Provider() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"paperspace_machine": resourceMachine(),
+			"paperspace_network": resourceNetwork(),
 			"paperspace_script":  resourceScript(),
 		},
 
