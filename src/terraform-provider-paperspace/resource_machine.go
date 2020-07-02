@@ -34,6 +34,12 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	body.AppendAsIfSet(d, "team_id", "teamId")
 	body.AppendAsIfSet(d, "script_id", "scriptId")
 	body.AppendAsIfSet(d, "network_id", "networkId")
+	body.AppendAsIfSet(d, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
+
+	s := d.Get("live_forever")
+	if s.(bool) == true {
+		body["shutdownTimeoutInHours"] = nil
+	}
 
 	// fields not tested when this project was picked back up for https://github.com/Paperspace/terraform-provider-paperspace/pull/3
 	body.AppendIfSet(d, "email")
@@ -272,7 +278,7 @@ func resourceMachine() *schema.Resource {
 			},
 			"shutdown_timeout_in_hours": &schema.Schema{
 				Type:     schema.TypeInt,
-				Computed: true,
+				Optional: true,
 			},
 			"shutdown_timeout_forces": &schema.Schema{
 				Type:     schema.TypeBool,
@@ -309,6 +315,10 @@ func resourceMachine() *schema.Resource {
 			"public_ip_address": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"live_forever": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
