@@ -36,6 +36,8 @@ resource "paperspace_machine" "my-machine-1" {
   user_id = data.paperspace_user.my-user-1.id  // optional, remove to default
   team_id = data.paperspace_user.my-user-1.team_id
   script_id = paperspace_script.my-script-1.id // optional, remove for no script
+  shutdown_timeout_in_hours = 42
+  # live_forever = true # enable this to make the machine have no shutdown timeout
 }
 
 resource "paperspace_network" "network" {
