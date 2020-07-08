@@ -35,6 +35,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	body.AppendAsIfSet(d, "script_id", "scriptId")
 	body.AppendAsIfSet(d, "network_id", "networkId")
 	body.AppendAsIfSet(d, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
+	body.AppendAsIfSet(d, "is_managed", "isManaged")
 
 	s := d.Get("live_forever")
 	if s.(bool) == true {
@@ -93,6 +94,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 		SetResDataFrom(d, body, "team_id", "teamId")
 		SetResDataFrom(d, body, "script_id", "scriptId")
 		SetResDataFrom(d, body, "dt_last_run", "dtLastRun")
+		SetResDataFrom(d, body, "is_managed", "isManaged")
 
 		d.SetId(id)
 
@@ -134,6 +136,7 @@ func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
 	SetResDataFrom(d, mp, "team_id", "teamId")
 	SetResDataFrom(d, mp, "script_id", "scriptId")
 	SetResDataFrom(d, mp, "dt_last_run", "dtLastRun")
+	SetResDataFrom(d, mp, "is_managed", "isManaged")
 
 	return nil
 }
@@ -317,6 +320,10 @@ func resourceMachine() *schema.Resource {
 				Computed: true,
 			},
 			"live_forever": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"is_managed": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
