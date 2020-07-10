@@ -4,7 +4,7 @@ provider "paperspace" {
 }
 
 data "paperspace_template" "my-template-1" {
-  label = "Ubuntu 18.04 Server"
+  id = "t04azgph" // this is one of the Ubuntu Server 18.04 templates
 }
 
 data "paperspace_user" "my-user-1" {
@@ -41,5 +41,5 @@ resource "paperspace_machine" "my-machine-1" {
 }
 
 resource "paperspace_network" "network" {
-  team_id = 00000 // change to your actual integer team id
+  team_id = 00000 // change to your team's actual database id (unlike team_id everywhere else, which is your team handle)
 }
