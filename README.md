@@ -13,30 +13,29 @@ It is offered currently as a Terraform 'private cloud' provider while under earl
 
 3) Acquire a Paperspace API key for your account. See [Paperspace API](https://paperspace.github.io/paperspace-node/) for instructions on creating an api key.
 
-4) Copy the sample Terraform config file at [src/terraform-provider-paperspace/main.tf](src/terraform-provider-paperspace/main.tf) into your project directory
+4) Copy the sample Terraform config file at [src/terraform-provider-paperspace/main.tf](src/terraform-provider-paperspace/main.tf) into your project directory.\
+\
+Modify this file to use your actual API Key, valid user email address, and team id for the account associated with the API Key.\
+\
+Note: if you clone down this repo, you can build/download the binary as a sibling to [src/terraform-provider-paperspace/main.tf](src/terraform-provider-paperspace/main.tf), replace the values described in #4 above with yours, and follow #5 below to use the Paperspace Terraform provider directly from this directory.
 
-Modify this file to use your actual API Key, valid user email address, and team id for the account associated with the API Key.
-
-4b) Note: if you clone down this repo, you can build/download the binary as a sibling to [src/terraform-provider-paperspace/main.tf](src/terraform-provider-paperspace/main.tf), replace the values described in #4 above with yours, and follow #5 below to use the Paperspace Terraform provider directly from this directory
-
-5) Run the following terraform commands interactively to exercise the configuration and examine the output:
-
-(Note the sample configuration will create a machine with a public ip; testing this configuration will result in charges for the machine and public ip resources in most cases.)
-
-```
-terraform plan
-terraform apply
-terraform show
-terraform refresh
-terraform show
-terraform plan
-```
+5) Run the following terraform commands interactively to exercise the configuration and examine the output.\
+\
+Note: the sample configuration will create a machine with a public ip; testing this configuration will result in charges for the machine and public ip resources in most cases.
+    ```
+    terraform plan
+    terraform apply
+    terraform show
+    terraform refresh
+    terraform show
+    terraform plan
+    ```
 
 6) When you are done with testing, run the following to destroy the configuration (and thus destroy the machine and script objects created above):
-```
-terraform destroy
-terraform show
-```  
+    ```
+    terraform destroy
+    terraform show
+    ```
 
 ## Building from source
 
