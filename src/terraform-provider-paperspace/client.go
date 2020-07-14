@@ -22,6 +22,21 @@ var RegionMap = map[string]int{
 	"Europe (AMS1)":    3,
 }
 
+type JobStorage struct {
+	Handle string           `json:"handle"`
+	TeamID int              `json:"teamId"`
+	Server JobStorageServer `json:"jobStorageServer"`
+}
+
+type JobStorageServer struct {
+	IP            string        `json:"ipAddress"`
+	StorageRegion StorageRegion `json:"storageRegion"`
+}
+
+type StorageRegion struct {
+	Name string `json:"name"`
+}
+
 type Network struct {
 	ID      int    `json:"id"`
 	Handle  string `json:"handle"`
@@ -333,4 +348,23 @@ func (paperspaceClient *PaperspaceClient) GetTeamNamedNetworkById(teamID int, id
 	}
 
 	return nil, fmt.Errorf("Error getting private network by id: %s", id)
+}
+
+func (paperspaceClient *PaperspaceClient) GetJobStorageByRegion(teamID int, region string) (JobStorage, error) {
+	var jobStorage JobStorage
+	var jobStorages []JobStorage
+	url := fmt.Sprintf("%s/accounts/team/%d/getJobStorage", paperspaceClient.APIHost, teamID)
+
+	_, err := paperspaceClient.RequestInterface("GET", url, nil, &jobStorages)
+	if err != nil {
+		return jobStorage, err
+	}
+
+	for _, jobStorageInstance := range jobStorages {
+		if jobStorageInstance.Server.StorageRegion.Name == region {
+			return jobStorageInstance, nil
+		}
+	}
+
+	return jobStorage, nil
 }

@@ -34,9 +34,10 @@ func Provider() *schema.Provider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"paperspace_network":  dataSourceNetwork(),
-			"paperspace_template": dataSourceTemplate(),
-			"paperspace_user":     dataSourceUser(),
+			"paperspace_job_storage": dataSourceJobStorage(),
+			"paperspace_network":     dataSourceNetwork(),
+			"paperspace_template":    dataSourceTemplate(),
+			"paperspace_user":        dataSourceUser(),
 		},
 
 		ConfigureFunc: providerConfigure,
