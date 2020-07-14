@@ -9,13 +9,22 @@ import (
 
 func dataSourceJobStorageRead(d *schema.ResourceData, m interface{}) error {
 	paperspaceClient := m.(PaperspaceClient)
+	region := paperspaceClient.Region
 
 	teamID, ok := d.Get("team_id").(int)
 	if !ok {
 		return fmt.Errorf("team_id is not a int")
 	}
+	regionData, ok := d.Get("region").(string)
+	if !ok {
+		return fmt.Errorf("region is not a string")
+	}
 
-	jobStorage, err := paperspaceClient.GetJobStorageByRegion(teamID, paperspaceClient.Region)
+	if regionData != "" {
+		region = regionData
+	}
+
+	jobStorage, err := paperspaceClient.GetJobStorageByRegion(teamID, region)
 	if err != nil {
 		return err
 	}
