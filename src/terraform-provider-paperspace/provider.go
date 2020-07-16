@@ -28,16 +28,16 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"paperspace_machine": resourceMachine(),
-			"paperspace_network": resourceNetwork(),
-			"paperspace_script":  resourceScript(),
+			"paperspace_job_storage": resourceJobStorage(),
+			"paperspace_machine":     resourceMachine(),
+			"paperspace_network":     resourceNetwork(),
+			"paperspace_script":      resourceScript(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"paperspace_job_storage": dataSourceJobStorage(),
-			"paperspace_network":     dataSourceNetwork(),
-			"paperspace_template":    dataSourceTemplate(),
-			"paperspace_user":        dataSourceUser(),
+			"paperspace_network":  dataSourceNetwork(),
+			"paperspace_template": dataSourceTemplate(),
+			"paperspace_user":     dataSourceUser(),
 		},
 
 		ConfigureFunc: providerConfigure,
