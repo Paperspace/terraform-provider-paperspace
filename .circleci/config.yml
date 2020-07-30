@@ -6,7 +6,7 @@ orbs:
 _workspace_root: &workspace_root .
 
 jobs:
-  test_cli:
+  test:
     docker:
       - image: golang:1.14
     steps:
