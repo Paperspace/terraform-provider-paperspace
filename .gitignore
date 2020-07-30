@@ -21,4 +21,4 @@ crash.log
 
 # Mac
 .DS_Store
-build
+/build
