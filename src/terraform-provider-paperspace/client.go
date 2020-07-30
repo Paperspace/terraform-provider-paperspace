@@ -16,6 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+var MachineNotFoundError = "Error on GetMachine: machine not found"
+var MachineDeleteNotFoundError = "Error on DeleteMachine: machine not found"
+
 var RegionMap = map[string]int{
 	"East Coast (NY2)": 1,
 	"West Coast (CA1)": 2,
@@ -254,7 +257,7 @@ func (paperspaceClient *PaperspaceClient) GetMachine(id string) (body map[string
 
 	nextID, _ := body["id"].(string)
 	if statusCode == 404 || nextID == "" {
-		return nil, fmt.Errorf("Error on GetMachine: machine not found")
+		return nil, fmt.Errorf(MachineNotFoundError)
 	}
 
 	return body, nil
@@ -295,6 +298,9 @@ func (paperspaceClient *PaperspaceClient) DeleteMachine(id string) (err error) {
 
 	if statusCode != 204 {
 		return fmt.Errorf("Error deleting machine")
+	}
+	if statusCode != 404 {
+		return fmt.Errorf(MachineDeleteNotFoundError)
 	}
 
 	return nil

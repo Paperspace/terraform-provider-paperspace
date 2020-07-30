@@ -1,0 +1,53 @@
+version: 2.1
+
+orbs:
+  docker-tools: paperspace/docker-tools@0.0.4
+  release-tools: paperspace/release-tools@0.0.2
+
+_workspace_root: &workspace_root .
+
+jobs:
+  test_cli:
+    docker:
+      - image: golang:1.14
+    steps:
+      - checkout
+      - run:
+          command: go test ./...
+  upload_assets:
+    docker:
+      - image: golang:1.14
+    steps:
+      - checkout
+      - run: apt update && apt install file jq -y
+      - run:
+          command: bin/build
+      - run:
+          command: bin/upload ${CIRCLE_TAG}
+      
+workflows:
+  version: 2
+  pr:
+    jobs:
+      - test:
+          filters:
+            branches:
+              ignore: master
+         
+  main:
+    jobs:
+      - release-tools/release:
+          context: semantic-release
+          filters:
+            branches:
+              only: master
+
+  tag:
+    jobs:
+      - upload_assets:
+          context: semantic-release
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/

@@ -71,32 +71,6 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 			return resource.RetryableError(fmt.Errorf("[INFO] Expected machine to be ready but was in state %s", state))
 		}
 
-		SetResData(d, body, "name")
-		SetResData(d, body, "os")
-		SetResData(d, body, "ram")
-		SetResData(d, body, "cpus")
-		SetResData(d, body, "gpu")
-		SetResDataFrom(d, body, "storage_total", "storageTotal")
-		SetResDataFrom(d, body, "storage_used", "storageUsed")
-		SetResDataFrom(d, body, "usage_rate", "usageRate")
-		SetResDataFrom(d, body, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
-		SetResDataFrom(d, body, "shutdown_timeout_forces", "shutdownTimeoutForces")
-		SetResDataFrom(d, body, "perform_auto_snapshot", "performAutoSnapshot")
-		SetResDataFrom(d, body, "auto_snapshot_frequency", "autoSnapshotFrequency")
-		SetResDataFrom(d, body, "auto_snapshot_save_count", "autoSnapshotSaveCount")
-		SetResDataFrom(d, body, "agent_type", "agentType")
-		SetResDataFrom(d, body, "dt_created", "dtCreated")
-		SetResData(d, body, "state")
-		SetResDataFrom(d, body, "network_id", "networkId") //overlays with null initially
-		SetResDataFrom(d, body, "private_ip_address", "privateIpAddress")
-		SetResDataFrom(d, body, "public_ip_address", "publicIpAddress")
-		SetResData(d, body, "region") //overlays with null initially
-		SetResDataFrom(d, body, "user_id", "userId")
-		SetResDataFrom(d, body, "team_id", "teamId")
-		SetResDataFrom(d, body, "script_id", "scriptId")
-		SetResDataFrom(d, body, "dt_last_run", "dtLastRun")
-		SetResDataFrom(d, body, "is_managed", "isManaged")
-
 		return resource.NonRetryableError(resourceMachineRead(d, m))
 	})
 }
@@ -104,44 +78,52 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
 	paperspaceClient := m.(PaperspaceClient)
 
-	_, err := paperspaceClient.GetMachine(d.Id())
+	body, err := paperspaceClient.GetMachine(d.Id())
 	if err != nil {
-		d.SetId("")
+		if err.Error() == MachineNotFoundError {
+			d.SetId("")
+			return nil
+		}
+
 		return err
 	}
 
-	mp := make(map[string]interface{})
-	SetResData(d, mp, "name")
-	SetResData(d, mp, "os")
-	SetResData(d, mp, "ram")
-	SetResData(d, mp, "cpus")
-	SetResData(d, mp, "gpu")
-	SetResDataFrom(d, mp, "storage_total", "storageTotal")
-	SetResDataFrom(d, mp, "storage_used", "storageUsed")
-	SetResDataFrom(d, mp, "usage_rate", "usageRate")
-	SetResDataFrom(d, mp, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
-	SetResDataFrom(d, mp, "shutdown_timeout_forces", "shutdownTimeoutForces")
-	SetResDataFrom(d, mp, "perform_auto_snapshot", "performAutoSnapshot")
-	SetResDataFrom(d, mp, "auto_snapshot_frequency", "autoSnapshotFrequency")
-	SetResDataFrom(d, mp, "auto_snapshot_save_count", "autoSnapshotSaveCount")
-	SetResDataFrom(d, mp, "agent_type", "agentType")
-	SetResDataFrom(d, mp, "dt_created", "dtCreated")
-	SetResData(d, mp, "state")
-	SetResDataFrom(d, mp, "network_id", "networkId") //overlays with null initially
-	SetResDataFrom(d, mp, "private_ip_address", "privateIpAddress")
-	SetResDataFrom(d, mp, "public_ip_address", "publicIpAddress")
-	SetResData(d, mp, "region") //overlays with null initially
-	SetResDataFrom(d, mp, "user_id", "userId")
-	SetResDataFrom(d, mp, "team_id", "teamId")
-	SetResDataFrom(d, mp, "script_id", "scriptId")
-	SetResDataFrom(d, mp, "dt_last_run", "dtLastRun")
-	SetResDataFrom(d, mp, "is_managed", "isManaged")
+	SetResData(d, body, "name")
+	SetResData(d, body, "os")
+	SetResData(d, body, "ram")
+	SetResData(d, body, "cpus")
+	SetResData(d, body, "gpu")
+	SetResDataFrom(d, body, "storage_total", "storageTotal")
+	SetResDataFrom(d, body, "storage_used", "storageUsed")
+	SetResDataFrom(d, body, "usage_rate", "usageRate")
+
+	shutdown_timeout := d.Get("shutdown_timeout_in_hours")
+	_, ok := shutdown_timeout.(int32)
+	if ok {
+		SetResDataFrom(d, body, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
+	}
+
+	SetResDataFrom(d, body, "shutdown_timeout_forces", "shutdownTimeoutForces")
+	SetResDataFrom(d, body, "perform_auto_snapshot", "performAutoSnapshot")
+	SetResDataFrom(d, body, "auto_snapshot_frequency", "autoSnapshotFrequency")
+	SetResDataFrom(d, body, "auto_snapshot_save_count", "autoSnapshotSaveCount")
+	SetResDataFrom(d, body, "agent_type", "agentType")
+	SetResDataFrom(d, body, "dt_created", "dtCreated")
+	SetResData(d, body, "state")
+	SetResDataFrom(d, body, "network_id", "networkId") //overlays with null initially
+	SetResDataFrom(d, body, "private_ip_address", "privateIpAddress")
+	SetResDataFrom(d, body, "public_ip_address", "publicIpAddress")
+	SetResData(d, body, "region") //overlays with null initially
+	SetResDataFrom(d, body, "user_id", "userId")
+	SetResDataFrom(d, body, "team_id", "teamId")
+	SetResDataFrom(d, body, "script_id", "scriptId")
+	SetResDataFrom(d, body, "dt_last_run", "dtLastRun")
+	SetResDataFrom(d, body, "is_managed", "isManaged")
 
 	return nil
 }
 
 func resourceMachineUpdate(d *schema.ResourceData, m interface{}) error {
-	// TODO: needs to be implemented
 	return resourceMachineRead(d, m)
 }
 
@@ -150,6 +132,10 @@ func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
 
 	err := paperspaceClient.DeleteMachine(d.Id())
 	if err != nil {
+		if err.Error() == MachineDeleteNotFoundError {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
