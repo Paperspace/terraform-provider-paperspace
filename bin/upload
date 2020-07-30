@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+TAG=$1
+
+function usage {
+    echo "Usage: upload VERSION"
+}
+
+function upload {
+    FILE=$1
+    RELEASE_NUMBER=$2
+
+    curl \
+        -H "Authorization: token ${GH_TOKEN}" \
+        -H "Content-Type: $(file -b --mime-type ${FILE})" \
+        --data-binary @${FILE} \
+        "https://uploads.github.com/repos/paperspace/terraform-provider-paperspace/releases/${RELEASE_NUMBER}/assets?name=$(basename ${FILE})"
+}
+
+if [ -z "${TAG}" ];then
+    usage
+    exit 1
+fi
+
+RELEASE_NUMBER=$(curl \
+    -H "Authorization: token ${GH_TOKEN}" \
+    "https://api.github.com/repos/paperspace/terraform-provider-paperspace/releases/tags/${TAG}" | jq '.id')
+
+upload ${DIR}/../build/terraform-provider-paperspace-darwin-amd64 ${RELEASE_NUMBER}
+upload ${DIR}/../build/terraform-provider-paperspace-linux-amd64 ${RELEASE_NUMBER}
+upload ${DIR}/../build/terraform-provider-paperspace-windows-amd64.exe ${RELEASE_NUMBER}
