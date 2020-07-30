@@ -1,7 +1,6 @@
 version: 2.1
 
 orbs:
-  docker-tools: paperspace/docker-tools@0.0.4
   release-tools: paperspace/release-tools@0.0.2
 
 _workspace_root: &workspace_root .
