@@ -12,7 +12,7 @@ import (
 )
 
 func dataSourceUserRead(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
 	log.Printf("[INFO] paperspace dataSourceUserRead Client ready")
 
