@@ -14,6 +14,7 @@ func resourceAutoscalingGroupCreate(d *schema.ResourceData, m interface{}) error
 	paperspaceClient := newPaperspaceClient(m)
 	autoscalingGroupCreateParams := paperspace.AutoscalingGroupCreateParams{
 		Name:        d.Get("name").(string),
+		ClusterID:   d.Get("cluster_id").(string),
 		Min:         d.Get("min").(int),
 		Max:         d.Get("max").(int),
 		MachineType: d.Get("machine_type").(string),
@@ -140,6 +141,10 @@ func resourceAutoscalingGroup() *schema.Resource {
 			},
 			"max": &schema.Schema{
 				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"cluster_id": &schema.Schema{
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"machine_type": &schema.Schema{
