@@ -106,7 +106,6 @@ func resourceAutoscalingGroupUpdate(d *schema.ResourceData, m interface{}) error
 		return resource.NonRetryableError(nil)
 	})
 
-	return resourceAutoscalingGroupRead(d, m)
 }
 
 func resourceAutoscalingGroupDelete(d *schema.ResourceData, m interface{}) error {
@@ -161,8 +160,8 @@ func resourceAutoscalingGroup() *schema.Resource {
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(3 * time.Minute),
-			Delete: schema.DefaultTimeout(3 * time.Minute),
+			Create: schema.DefaultTimeout(1 * time.Minute),
+			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 	}
 }

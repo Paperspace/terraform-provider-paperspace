@@ -102,9 +102,15 @@ func newPaperspaceClient(v interface{}) *paperspace.Client {
 	client := paperspace.NewClient()
 	config, ok := v.(ClientConfig)
 	if !ok {
-		return client
+		return paperspace.NewClient()
 	}
 
+	apiBackend := paperspace.NewAPIBackend()
+	if config.APIHost != "" {
+		apiBackend.BaseURL = config.APIHost
+	}
+
+	client = paperspace.NewClientWithBackend(paperspace.Backend(apiBackend))
 	client.APIKey = config.APIKey
 
 	return client
