@@ -43,7 +43,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("team_id is not an int")
 	}
 
-	regionId, ok := RegionMap[paperspaceClient.Region]
+	regionID, ok := RegionMap[paperspaceClient.Region]
 	if !ok {
 		return fmt.Errorf("Region %s not found", paperspaceClient.Region)
 	}
@@ -52,14 +52,15 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 
 	createNamedNetworkParams := CreateTeamNamedNetworkParams{
 		Name:     name,
-		RegionId: regionId,
+		RegionId: regionID,
 	}
 
 	if err := paperspaceClient.CreateTeamNamedNetwork(teamID, createNamedNetworkParams); err != nil {
 		return fmt.Errorf("Error creating private network: %s", err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	timeout, _ := time.ParseDuration("2m")
+	return resource.Retry(timeout, func() *resource.RetryError {
 		paperspaceClient := m.(PaperspaceClient)
 
 		// XXX: potential race condition for multiple networks created with the name concurrently
