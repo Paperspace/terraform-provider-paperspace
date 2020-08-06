@@ -12,6 +12,8 @@ import (
 
 // adopted from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go/22892986#22892986
 var chars = []rune("0123456789abcdefghijklmnopqrstuvwxyz")
+var networkCreateTimeout = "2m"
+var networkDefaultTimeout = "1m"
 
 func randSeq(n int) string {
 	b := make([]rune, n)
@@ -105,6 +107,8 @@ func resourceNetworkDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceNetwork() *schema.Resource {
+	createTimeout, _ := time.ParseDuration(networkCreateTimeout)
+	defaultTimeout, _ := time.ParseDuration(networkDefaultTimeout)
 	return &schema.Resource{
 		Create: resourceNetworkCreate,
 		Read:   resourceNetworkRead,
@@ -112,6 +116,10 @@ func resourceNetwork() *schema.Resource {
 		Delete: resourceNetworkDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create:  &createTimeout,
+			Default: &defaultTimeout,
 		},
 
 		Schema: map[string]*schema.Schema{
