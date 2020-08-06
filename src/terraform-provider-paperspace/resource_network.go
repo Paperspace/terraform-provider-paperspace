@@ -12,6 +12,8 @@ import (
 
 // adopted from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go/22892986#22892986
 var chars = []rune("0123456789abcdefghijklmnopqrstuvwxyz")
+var networkCreateTimeout = "2m"
+var networkDefaultTimeout = "1m"
 
 func randSeq(n int) string {
 	b := make([]rune, n)
@@ -43,7 +45,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("team_id is not an int")
 	}
 
-	regionID, ok := RegionMap[paperspaceClient.Region]
+	regionId, ok := RegionMap[paperspaceClient.Region]
 	if !ok {
 		return fmt.Errorf("Region %s not found", paperspaceClient.Region)
 	}
@@ -52,15 +54,14 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 
 	createNamedNetworkParams := CreateTeamNamedNetworkParams{
 		Name:     name,
-		RegionId: regionID,
+		RegionId: regionId,
 	}
 
 	if err := paperspaceClient.CreateTeamNamedNetwork(teamID, createNamedNetworkParams); err != nil {
 		return fmt.Errorf("Error creating private network: %s", err)
 	}
 
-	timeout, _ := time.ParseDuration("2m")
-	return resource.Retry(timeout, func() *resource.RetryError {
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		paperspaceClient := m.(PaperspaceClient)
 
 		// XXX: potential race condition for multiple networks created with the name concurrently
@@ -106,6 +107,8 @@ func resourceNetworkDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceNetwork() *schema.Resource {
+	createTimeout, _ := time.ParseDuration(networkCreateTimeout)
+	defaultTimeout, _ := time.ParseDuration(networkDefaultTimeout)
 	return &schema.Resource{
 		Create: resourceNetworkCreate,
 		Read:   resourceNetworkRead,
@@ -113,6 +116,10 @@ func resourceNetwork() *schema.Resource {
 		Delete: resourceNetworkDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create:  &createTimeout,
+			Default: &defaultTimeout,
 		},
 
 		Schema: map[string]*schema.Schema{
