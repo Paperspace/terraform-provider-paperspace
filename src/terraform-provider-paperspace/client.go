@@ -225,18 +225,24 @@ func (paperspaceClient *PaperspaceClient) Request(method string, url string, dat
 
 	req, err := http.NewRequest(method, url, buf)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Error constructing request: %s", err)
+		return nil, statusCode, fmt.Errorf("Error constructing request: %s", err)
 	}
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
-		return nil, resp.StatusCode, fmt.Errorf("Error completing request: %s", err)
+		if resp != nil {
+			statusCode = resp.StatusCode
+		}
+		return nil, statusCode, fmt.Errorf("Error completing request: %s", err)
 	}
 	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
-		return nil, resp.StatusCode, fmt.Errorf("Error decoding response body: %s", err)
+		if resp != nil {
+			statusCode = resp.StatusCode
+		}
+		return nil, statusCode, fmt.Errorf("Error decoding response body: %s", err)
 	}
 
 	LogHttpResponse("", req.URL, resp, body, err)
