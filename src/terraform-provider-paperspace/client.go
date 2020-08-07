@@ -134,16 +134,6 @@ func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient) {
 		Timeout: timeout,
 	}
 
-	transport := WithHeader(client.Transport)
-	transport.Set("x-api-key", c.APIKey)
-	transport.Set("Accept", "application/json")
-	transport.Set("Content-Type", "application/json")
-	transport.Set("User-Agent", "terraform-provider-paperspace")
-	transport.Set("ps_client_name", "terraform-provider-paperspace")
-	client.Transport = transport
-
-	log.Printf("[DEBUG] Paperspace client transport %v", transport)
-
 	paperspaceClient = PaperspaceClient{
 		APIKey:     c.APIKey,
 		APIHost:    c.APIHost,
@@ -156,30 +146,12 @@ func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient) {
 	return paperspaceClient
 }
 
-// from https://stackoverflow.com/questions/51325704/adding-a-default-http-header-in-go
-type withHeader struct {
-	http.Header
-	transport http.RoundTripper
-}
-
-// WithHeader effectively allows http.Client to have global headers
-func WithHeader(transport http.RoundTripper) withHeader {
-	if transport == nil {
-		transport = http.DefaultTransport
-	}
-
-	return withHeader{
-		Header:    make(http.Header),
-		transport: transport,
-	}
-}
-
-func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
-	for k, v := range h.Header {
-		req.Header[k] = v
-	}
-
-	return h.transport.RoundTrip(req)
+func (paperspaceClient *PaperspaceClient) addRequestHeaders(req *http.Request) {
+	req.Header.Add("x-api-key", paperspaceClient.APIKey)
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("User-Agent", "terraform-provider-paperspace")
+	req.Header.Add("ps_client_name", "terraform-provider-paperspace")
 }
 
 func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url string, params, result interface{}) (res *http.Response, err error) {
@@ -202,6 +174,7 @@ func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url st
 	if err != nil {
 		return nil, err
 	}
+	paperspaceClient.addRequestHeaders(req)
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
@@ -227,6 +200,7 @@ func (paperspaceClient *PaperspaceClient) Request(method string, url string, dat
 	if err != nil {
 		return nil, statusCode, fmt.Errorf("Error constructing request: %s", err)
 	}
+	paperspaceClient.addRequestHeaders(req)
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
