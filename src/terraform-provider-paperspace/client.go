@@ -129,7 +129,7 @@ type PaperspaceClient struct {
 }
 
 func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient, err error) {
-	timeout := 10 * time.Second
+	timeout := 30 * time.Second
 	client := &http.Client{
 		Timeout: timeout,
 	}
