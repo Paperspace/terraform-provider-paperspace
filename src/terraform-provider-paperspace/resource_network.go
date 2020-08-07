@@ -39,7 +39,7 @@ func updateNetworkSchema(d *schema.ResourceData, network Network, name string) {
 }
 
 func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 	teamID, ok := d.Get("team_id").(int)
 	if !ok {
 		return fmt.Errorf("team_id is not an int")
@@ -62,7 +62,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		paperspaceClient := m.(PaperspaceClient)
+		paperspaceClient := newInternalPaperspaceClient(m)
 
 		// XXX: potential race condition for multiple networks created with the name concurrently
 		// Add sync API response to API
@@ -77,7 +77,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceNetworkRead(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 	teamID, ok := d.Get("team_id").(int)
 	if !ok {
 		return fmt.Errorf("team_id is not an int")

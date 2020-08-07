@@ -128,7 +128,7 @@ type PaperspaceClient struct {
 	HttpClient *http.Client
 }
 
-func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient, err error) {
+func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient) {
 	timeout := 10 * time.Second
 	client := &http.Client{
 		Timeout: timeout,
@@ -153,7 +153,7 @@ func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient, err error) {
 
 	log.Printf("[DEBUG] Paperspace client config %v", paperspaceClient)
 
-	return paperspaceClient, nil
+	return paperspaceClient
 }
 
 // from https://stackoverflow.com/questions/51325704/adding-a-default-http-header-in-go

@@ -12,7 +12,7 @@ import (
 )
 
 func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
 	log.Printf("[INFO] paperspace resourceScriptCreate Client ready")
 
@@ -88,7 +88,7 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
 	log.Printf("[INFO] paperspace resourceScriptRead Client ready")
 
@@ -182,7 +182,7 @@ func resourceScriptUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptDelete(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
 	log.Printf("[INFO] paperspace resourceScriptDelete Client ready")
 
