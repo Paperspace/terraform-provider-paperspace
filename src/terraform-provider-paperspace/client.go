@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -146,12 +147,19 @@ func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient) {
 	return paperspaceClient
 }
 
-func (paperspaceClient *PaperspaceClient) addRequestHeaders(req *http.Request) {
+func (paperspaceClient *PaperspaceClient) NewHttpRequest(method, url string, buf io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, buf)
+	if err != nil {
+		return nil, err
+	}
+
 	req.Header.Add("x-api-key", paperspaceClient.APIKey)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("User-Agent", "terraform-provider-paperspace")
 	req.Header.Add("ps_client_name", "terraform-provider-paperspace")
+
+	return req, nil
 }
 
 func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url string, params, result interface{}) (res *http.Response, err error) {
@@ -170,11 +178,10 @@ func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url st
 	buf := bytes.NewBuffer(data)
 	logHttpRequestConstruction(method, url, buf)
 
-	req, err := http.NewRequest(method, url, body)
+	req, err := paperspaceClient.NewHttpRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
-	paperspaceClient.addRequestHeaders(req)
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
@@ -196,11 +203,10 @@ func (paperspaceClient *PaperspaceClient) Request(method string, url string, dat
 
 	logHttpRequestConstruction(method, url, buf)
 
-	req, err := http.NewRequest(method, url, buf)
+	req, err := paperspaceClient.NewHttpRequest(method, url, body)
 	if err != nil {
 		return nil, statusCode, fmt.Errorf("Error constructing request: %s", err)
 	}
-	paperspaceClient.addRequestHeaders(req)
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
