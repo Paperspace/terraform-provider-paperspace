@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/paperspace/paperspace-go"
 )
 
 func Provider() *schema.Provider {
@@ -28,9 +29,10 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"paperspace_machine": resourceMachine(),
-			"paperspace_network": resourceNetwork(),
-			"paperspace_script":  resourceScript(),
+			"paperspace_autoscaling_group": resourceAutoscalingGroup(),
+			"paperspace_machine":           resourceMachine(),
+			"paperspace_network":           resourceNetwork(),
+			"paperspace_script":            resourceScript(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -84,5 +86,32 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		log.Printf("[INFO] paperspace provider region %v", config.Region)
 	}
 
+	return config, nil
+}
+
+func newInternalPaperspaceClient(v interface{}) PaperspaceClient {
+	config, ok := v.(ClientConfig)
+	if !ok {
+		return PaperspaceClient{}
+	}
+
 	return config.Client()
+}
+
+func newPaperspaceClient(v interface{}) *paperspace.Client {
+	client := paperspace.NewClient()
+	config, ok := v.(ClientConfig)
+	if !ok {
+		return paperspace.NewClient()
+	}
+
+	apiBackend := paperspace.NewAPIBackend()
+	if config.APIHost != "" {
+		apiBackend.BaseURL = config.APIHost
+	}
+
+	client = paperspace.NewClientWithBackend(paperspace.Backend(apiBackend))
+	client.APIKey = config.APIKey
+
+	return client
 }

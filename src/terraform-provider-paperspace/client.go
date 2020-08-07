@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -128,21 +129,11 @@ type PaperspaceClient struct {
 	HttpClient *http.Client
 }
 
-func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient, err error) {
+func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient) {
 	timeout := 30 * time.Second
 	client := &http.Client{
 		Timeout: timeout,
 	}
-
-	transport := WithHeader(client.Transport)
-	transport.Set("x-api-key", c.APIKey)
-	transport.Set("Accept", "application/json")
-	transport.Set("Content-Type", "application/json")
-	transport.Set("User-Agent", "terraform-provider-paperspace")
-	transport.Set("ps_client_name", "terraform-provider-paperspace")
-	client.Transport = transport
-
-	log.Printf("[DEBUG] Paperspace client transport %v", transport)
 
 	paperspaceClient = PaperspaceClient{
 		APIKey:     c.APIKey,
@@ -153,33 +144,22 @@ func (c *ClientConfig) Client() (paperspaceClient PaperspaceClient, err error) {
 
 	log.Printf("[DEBUG] Paperspace client config %v", paperspaceClient)
 
-	return paperspaceClient, nil
+	return paperspaceClient
 }
 
-// from https://stackoverflow.com/questions/51325704/adding-a-default-http-header-in-go
-type withHeader struct {
-	http.Header
-	transport http.RoundTripper
-}
-
-// WithHeader effectively allows http.Client to have global headers
-func WithHeader(transport http.RoundTripper) withHeader {
-	if transport == nil {
-		transport = http.DefaultTransport
+func (paperspaceClient *PaperspaceClient) NewHttpRequest(method, url string, buf io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, buf)
+	if err != nil {
+		return nil, err
 	}
 
-	return withHeader{
-		Header:    make(http.Header),
-		transport: transport,
-	}
-}
+	req.Header.Add("x-api-key", paperspaceClient.APIKey)
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("User-Agent", "terraform-provider-paperspace")
+	req.Header.Add("ps_client_name", "terraform-provider-paperspace")
 
-func (h withHeader) RoundTrip(req *http.Request) (*http.Response, error) {
-	for k, v := range h.Header {
-		req.Header[k] = v
-	}
-
-	return h.transport.RoundTrip(req)
+	return req, nil
 }
 
 func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url string, params, result interface{}) (res *http.Response, err error) {
@@ -198,7 +178,7 @@ func (paperspaceClient *PaperspaceClient) RequestInterface(method string, url st
 	buf := bytes.NewBuffer(data)
 	logHttpRequestConstruction(method, url, buf)
 
-	req, err := http.NewRequest(method, url, body)
+	req, err := paperspaceClient.NewHttpRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
@@ -223,20 +203,26 @@ func (paperspaceClient *PaperspaceClient) Request(method string, url string, dat
 
 	logHttpRequestConstruction(method, url, buf)
 
-	req, err := http.NewRequest(method, url, buf)
+	req, err := paperspaceClient.NewHttpRequest(method, url, buf)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Error constructing request: %s", err)
+		return nil, statusCode, fmt.Errorf("Error constructing request: %s", err)
 	}
 
 	resp, err := paperspaceClient.HttpClient.Do(req)
 	if err != nil {
-		return nil, resp.StatusCode, fmt.Errorf("Error completing request: %s", err)
+		if resp != nil {
+			statusCode = resp.StatusCode
+		}
+		return nil, statusCode, fmt.Errorf("Error completing request: %s", err)
 	}
 	defer resp.Body.Close()
 
 	err = json.NewDecoder(resp.Body).Decode(&body)
 	if err != nil {
-		return nil, resp.StatusCode, fmt.Errorf("Error decoding response body: %s", err)
+		if resp != nil {
+			statusCode = resp.StatusCode
+		}
+		return nil, statusCode, fmt.Errorf("Error decoding response body: %s", err)
 	}
 
 	LogHttpResponse("", req.URL, resp, body, err)

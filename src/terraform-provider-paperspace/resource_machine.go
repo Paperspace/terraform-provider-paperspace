@@ -12,9 +12,9 @@ import (
 )
 
 func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
-	region := m.(PaperspaceClient).Region
+	region := paperspaceClient.Region
 	if r, ok := d.GetOk("region"); ok {
 		region = r.(string)
 	}
@@ -76,7 +76,7 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceMachineRead(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
 	body, err := paperspaceClient.GetMachine(d.Id())
 	if err != nil {
@@ -128,7 +128,7 @@ func resourceMachineUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceMachineDelete(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
 	err := paperspaceClient.DeleteMachine(d.Id())
 	if err != nil {

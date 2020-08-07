@@ -12,6 +12,8 @@ import (
 
 // adopted from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go/22892986#22892986
 var chars = []rune("0123456789abcdefghijklmnopqrstuvwxyz")
+var networkCreateTimeout = "2m"
+var networkDefaultTimeout = "1m"
 
 func randSeq(n int) string {
 	b := make([]rune, n)
@@ -37,7 +39,7 @@ func updateNetworkSchema(d *schema.ResourceData, network Network, name string) {
 }
 
 func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 	teamID, ok := d.Get("team_id").(int)
 	if !ok {
 		return fmt.Errorf("team_id is not an int")
@@ -60,7 +62,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		paperspaceClient := m.(PaperspaceClient)
+		paperspaceClient := newInternalPaperspaceClient(m)
 
 		// XXX: potential race condition for multiple networks created with the name concurrently
 		// Add sync API response to API
@@ -75,7 +77,7 @@ func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceNetworkRead(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 	teamID, ok := d.Get("team_id").(int)
 	if !ok {
 		return fmt.Errorf("team_id is not an int")
@@ -105,6 +107,8 @@ func resourceNetworkDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceNetwork() *schema.Resource {
+	createTimeout, _ := time.ParseDuration(networkCreateTimeout)
+	defaultTimeout, _ := time.ParseDuration(networkDefaultTimeout)
 	return &schema.Resource{
 		Create: resourceNetworkCreate,
 		Read:   resourceNetworkRead,
@@ -112,6 +116,10 @@ func resourceNetwork() *schema.Resource {
 		Delete: resourceNetworkDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create:  &createTimeout,
+			Default: &defaultTimeout,
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -5,18 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"net/http/httputil"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
 	log.Printf("[INFO] paperspace resourceScriptCreate Client ready")
 
-	region := m.(PaperspaceClient).Region
+	region := paperspaceClient.Region
 	if r, ok := d.GetOk("region"); ok {
 		region = r.(string)
 	}
@@ -35,7 +34,7 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 	log.Println(string(data))
 
 	url := fmt.Sprintf("%s/scripts/createScript", paperspaceClient.APIHost)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	req, err := paperspaceClient.NewHttpRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		return fmt.Errorf("Error constructing CreateScript request: %s", err)
 	}
@@ -88,12 +87,12 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
 	log.Printf("[INFO] paperspace resourceScriptRead Client ready")
 
 	url := fmt.Sprintf("%s/scripts/getScript?scriptId=%s", paperspaceClient.APIHost, d.Id())
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := paperspaceClient.NewHttpRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing GetScript request: %s", err)
 	}
@@ -143,7 +142,7 @@ func resourceScriptRead(d *schema.ResourceData, m interface{}) error {
 	SetResDataFrom(d, mp, "run_once", "runOnce")
 
 	url = fmt.Sprintf("%s/scripts/getScriptText?scriptId=%s", paperspaceClient.APIHost, d.Id())
-	req, err = http.NewRequest("GET", url, nil)
+	req, err = paperspaceClient.NewHttpRequest("GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing GetScriptText request: %s", err)
 	}
@@ -182,12 +181,12 @@ func resourceScriptUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceScriptDelete(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 
 	log.Printf("[INFO] paperspace resourceScriptDelete Client ready")
 
 	url := fmt.Sprintf("%s/scripts/%s/destroy", paperspaceClient.APIHost, d.Id())
-	req, err := http.NewRequest("POST", url, nil)
+	req, err := paperspaceClient.NewHttpRequest("POST", url, nil)
 	if err != nil {
 		return fmt.Errorf("Error constructing DeleteScript request: %s", err)
 	}

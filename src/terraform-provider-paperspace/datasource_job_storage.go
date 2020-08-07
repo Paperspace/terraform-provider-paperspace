@@ -8,7 +8,7 @@ import (
 )
 
 func dataSourceJobStorageRead(d *schema.ResourceData, m interface{}) error {
-	paperspaceClient := m.(PaperspaceClient)
+	paperspaceClient := newInternalPaperspaceClient(m)
 	region := paperspaceClient.Region
 
 	teamID, ok := d.Get("team_id").(int)
