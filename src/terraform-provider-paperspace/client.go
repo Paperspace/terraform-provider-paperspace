@@ -203,7 +203,7 @@ func (paperspaceClient *PaperspaceClient) Request(method string, url string, dat
 
 	logHttpRequestConstruction(method, url, buf)
 
-	req, err := paperspaceClient.NewHttpRequest(method, url, body)
+	req, err := paperspaceClient.NewHttpRequest(method, url, buf)
 	if err != nil {
 		return nil, statusCode, fmt.Errorf("Error constructing request: %s", err)
 	}
