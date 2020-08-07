@@ -14,7 +14,7 @@ import (
 func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	paperspaceClient := newInternalPaperspaceClient(m)
 
-	region := m.(PaperspaceClient).Region
+	region := paperspaceClient.Region
 	if r, ok := d.GetOk("region"); ok {
 		region = r.(string)
 	}

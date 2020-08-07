@@ -15,7 +15,7 @@ func resourceScriptCreate(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] paperspace resourceScriptCreate Client ready")
 
-	region := m.(PaperspaceClient).Region
+	region := paperspaceClient.Region
 	if r, ok := d.GetOk("region"); ok {
 		region = r.(string)
 	}
