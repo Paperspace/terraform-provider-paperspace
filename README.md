@@ -9,7 +9,7 @@ It is offered currently as a Terraform 'private cloud' provider while under earl
 [<img width="300" alt="Terraform Overview Video" src="https://user-images.githubusercontent.com/585865/90682577-275f7c00-e233-11ea-9865-56e7f9205385.png">
 ](https://youtu.be/P3__yTs24rU)
 
-
+[Read the blog post](https://blog.paperspace.com/introducing-paperspace-terraform-provider/)
 
 ## Installation and Testing
 1) Install [terraform](https://www.terraform.io/downloads.html) v0.12.26 and make sure it is in your path.
