@@ -1,8 +1,15 @@
+![PS+Terraform2](https://user-images.githubusercontent.com/585865/90683337-5e825d00-e234-11ea-8bda-c4b299a00189.png)
+
+
 # terraform-provider-paperspace
 This is a Terraform provider for Paperspace infrastructure.
 
 It is offered currently as a Terraform 'private cloud' provider while under early development.  We are moving toward contributing it back to the terraform open source project, which will remove the need for a separate download and installation step in the future.
 
+[<img width="300" alt="Paperspace Terraform Provider " src="https://user-images.githubusercontent.com/585865/90682577-275f7c00-e233-11ea-9865-56e7f9205385.png">
+](https://youtu.be/P3__yTs24rU)
+
+[Read the blog post](https://blog.paperspace.com/introducing-paperspace-terraform-provider/)
 
 ## Installation and Testing
 1) Install [terraform](https://www.terraform.io/downloads.html) v0.12.26 and make sure it is in your path.
