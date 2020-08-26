@@ -8,6 +8,28 @@ function usage {
     echo "Usage: upload VERSION"
 }
 
+function archive {
+    OS=$1
+    ARCH=$2
+
+    FILE_NAME=terraform-provider-paperspace-${OS}-${ARCH}
+    TARGET_DIR=${DIR}/../build/${OS}-${ARCH}
+    TARGET_FILE_NAME=terraform-provider-paperspace_${TAG}
+    ZIP_FILE_NAME=terraform-provider-paperspace_${TAG}_${OS}_${ARCH}.zip
+
+    if [ "OS" = "windows" ];then
+        FILE_NAME=${FILE_NAME}.exe
+    fi
+
+    rm -rf ${TARGET_DIR}
+    mkdir -p ${TARGET_DIR}
+    pushd ${TARGET_DIR}
+        cp ${DIR}/../build/$FILE_NAME ./$TARGET_FILE_NAME
+        zip ${ZIP_FILE_NAME} ./$TARGET_FILE_NAME
+        cp ${ZIP_FILE_NAME} ${DIR}../build/
+    popd
+}
+
 function upload {
     FILE=$1
     RELEASE_NUMBER=$2
@@ -28,6 +50,19 @@ RELEASE_NUMBER=$(curl \
     -H "Authorization: token ${GH_TOKEN}" \
     "https://api.github.com/repos/paperspace/terraform-provider-paperspace/releases/tags/${TAG}" | jq '.id')
 
+
+archive darwin amd64
+archive linux amd64
+archive windows amd64
+
+shasum -a 256 ${DIR}/../build/*.zip > ${DIR}/../build/terraform-provider-paperspace_${TAG}_SHA256SUMS
+gpg --detach-sign ${DIR}/../build/terraform-provider-paperspace_${TAG}_SHA256SUMS
+upload ${DIR}/../build/terraform-provider-paperspace_${TAG}_SHA256SUMS
+
 upload ${DIR}/../build/terraform-provider-paperspace-darwin-amd64 ${RELEASE_NUMBER}
 upload ${DIR}/../build/terraform-provider-paperspace-linux-amd64 ${RELEASE_NUMBER}
 upload ${DIR}/../build/terraform-provider-paperspace-windows-amd64.exe ${RELEASE_NUMBER}
+    
+upload ${DIR}/../build/terraform-provider-paperspace_${TAG}_darwin_amd64.zip
+upload ${DIR}/../build/terraform-provider-paperspace_${TAG}_linux_amd64.zip
+upload ${DIR}/../build/terraform-provider-paperspace_${TAG}_windows_amd64.zip
