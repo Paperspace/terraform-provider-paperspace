@@ -8,6 +8,18 @@ import (
 	"github.com/paperspace/paperspace-go"
 )
 
+func resetIfNotFound(d *schema.ResourceData, err error) error {
+	paperspaceError, ok := err.(paperspace.PaperspaceError)
+	if ok {
+		if paperspaceError.Status == 404 {
+			d.SetId("")
+			return nil
+		}
+	}
+
+	return err
+}
+
 func resourceAutoscalingGroupCreate(d *schema.ResourceData, m interface{}) error {
 	var autoscalingGroup paperspace.AutoscalingGroup
 
@@ -52,15 +64,7 @@ func resourceAutoscalingGroupRead(d *schema.ResourceData, m interface{}) error {
 
 	autoscalingGroup, err := paperspaceClient.GetAutoscalingGroup(d.Id(), paperspace.AutoscalingGroupGetParams{})
 	if err != nil {
-		paperspaceError, ok := err.(paperspace.PaperspaceError)
-		if ok {
-			if paperspaceError.Status == 404 {
-				d.SetId("")
-				return nil
-			}
-		}
-
-		return err
+		return resetIfNotFound(d, err)
 	}
 
 	d.Set("name", autoscalingGroup.Name)
@@ -90,7 +94,7 @@ func resourceAutoscalingGroupUpdate(d *schema.ResourceData, m interface{}) error
 
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		if err := paperspaceClient.UpdateAutoscalingGroup(d.Id(), autoscalingGroupUpdateParams); err != nil {
-			return resource.RetryableError(err)
+			return resource.RetryableError(resetIfNotFound(d, err))
 		}
 
 		return resource.NonRetryableError(nil)
@@ -114,7 +118,7 @@ func resourceAutoscalingGroupDelete(d *schema.ResourceData, m interface{}) error
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		if err := paperspaceClient.DeleteAutoscalingGroup(d.Id(), paperspace.AutoscalingGroupDeleteParams{}); err != nil {
-			return resource.RetryableError(err)
+			return resource.RetryableError(resetIfNotFound(d, err))
 		}
 
 		return resource.NonRetryableError(nil)
