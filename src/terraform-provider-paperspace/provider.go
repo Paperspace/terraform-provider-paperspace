@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/Paperspace/paperspace-go"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/paperspace/paperspace-go"
 )
 
 func Provider() *schema.Provider {

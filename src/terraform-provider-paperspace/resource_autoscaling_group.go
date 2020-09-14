@@ -3,10 +3,21 @@ package main
 import (
 	"time"
 
+	"github.com/Paperspace/paperspace-go"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/paperspace/paperspace-go"
 )
+
+func ErrNotFound(err error) bool {
+	paperspaceError, ok := err.(*paperspace.PaperspaceError)
+	if ok {
+		if paperspaceError.Status == 404 {
+			return true
+		}
+	}
+
+	return false
+}
 
 func resourceAutoscalingGroupCreate(d *schema.ResourceData, m interface{}) error {
 	var autoscalingGroup paperspace.AutoscalingGroup
@@ -52,12 +63,9 @@ func resourceAutoscalingGroupRead(d *schema.ResourceData, m interface{}) error {
 
 	autoscalingGroup, err := paperspaceClient.GetAutoscalingGroup(d.Id(), paperspace.AutoscalingGroupGetParams{})
 	if err != nil {
-		paperspaceError, ok := err.(paperspace.PaperspaceError)
-		if ok {
-			if paperspaceError.Status == 404 {
-				d.SetId("")
-				return nil
-			}
+		if ErrNotFound(err) {
+			d.SetId("")
+			return nil
 		}
 
 		return err
@@ -79,8 +87,8 @@ func resourceAutoscalingGroupUpdate(d *schema.ResourceData, m interface{}) error
 	autoscalingGroupUpdateParams := paperspace.AutoscalingGroupUpdateParams{
 		Attributes: paperspace.AutoscalingGroupUpdateAttributeParams{
 			Name:        d.Get("name").(string),
-			Min:         d.Get("min").(int),
-			Max:         d.Get("max").(int),
+			Min:         d.Get("min").(*int),
+			Max:         d.Get("max").(*int),
 			MachineType: d.Get("machine_type").(string),
 			TemplateID:  d.Get("template_id").(string),
 			NetworkID:   d.Get("network_id").(string),
@@ -114,6 +122,9 @@ func resourceAutoscalingGroupDelete(d *schema.ResourceData, m interface{}) error
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		if err := paperspaceClient.DeleteAutoscalingGroup(d.Id(), paperspace.AutoscalingGroupDeleteParams{}); err != nil {
+			if ErrNotFound(err) {
+				return resource.NonRetryableError(nil)
+			}
 			return resource.RetryableError(err)
 		}
 
