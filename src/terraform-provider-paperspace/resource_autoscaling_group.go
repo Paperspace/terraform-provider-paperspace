@@ -84,11 +84,10 @@ func resourceAutoscalingGroupUpdate(d *schema.ResourceData, m interface{}) error
 	paperspaceClient := newPaperspaceClient(m)
 	autoscalingGroupUpdateParams := paperspace.AutoscalingGroupUpdateParams{
 		Attributes: paperspace.AutoscalingGroupUpdateAttributeParams{
-			Name:        d.Get("name").(string),
-			MachineType: d.Get("machine_type").(string),
-			TemplateID:  d.Get("template_id").(string),
-			NetworkID:   d.Get("network_id").(string),
-			ScriptID:    d.Get("startup_script_id").(string),
+			Name:       d.Get("name").(string),
+			TemplateID: d.Get("template_id").(string),
+			NetworkID:  d.Get("network_id").(string),
+			ScriptID:   d.Get("startup_script_id").(string),
 		},
 	}
 
