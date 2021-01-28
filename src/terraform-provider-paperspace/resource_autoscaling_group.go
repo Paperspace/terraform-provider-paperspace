@@ -72,8 +72,6 @@ func resourceAutoscalingGroupRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("name", autoscalingGroup.Name)
-	d.Set("min", autoscalingGroup.Min)
-	d.Set("max", autoscalingGroup.Max)
 	d.Set("machine_type", autoscalingGroup.MachineType)
 	d.Set("template_id", autoscalingGroup.TemplateID)
 	d.Set("network_id", autoscalingGroup.NetworkID)
@@ -86,13 +84,10 @@ func resourceAutoscalingGroupUpdate(d *schema.ResourceData, m interface{}) error
 	paperspaceClient := newPaperspaceClient(m)
 	autoscalingGroupUpdateParams := paperspace.AutoscalingGroupUpdateParams{
 		Attributes: paperspace.AutoscalingGroupUpdateAttributeParams{
-			Name:        d.Get("name").(string),
-			Min:         d.Get("min").(*int),
-			Max:         d.Get("max").(*int),
-			MachineType: d.Get("machine_type").(string),
-			TemplateID:  d.Get("template_id").(string),
-			NetworkID:   d.Get("network_id").(string),
-			ScriptID:    d.Get("startup_script_id").(string),
+			Name:       d.Get("name").(string),
+			TemplateID: d.Get("template_id").(string),
+			NetworkID:  d.Get("network_id").(string),
+			ScriptID:   d.Get("startup_script_id").(string),
 		},
 	}
 
