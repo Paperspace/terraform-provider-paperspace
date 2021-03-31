@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Paperspace/paperspace-go"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -35,7 +36,6 @@ func updateNetworkSchema(d *schema.ResourceData, network Network, name string) {
 	d.Set("name", name)
 	d.Set("netmask", network.Netmask)
 	d.Set("network", network.Network)
-	d.Set("vlan_id", network.VlanID)
 }
 
 func resourceNetworkCreate(d *schema.ResourceData, m interface{}) error {
@@ -96,14 +96,21 @@ func resourceNetworkRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceNetworkUpdate(d *schema.ResourceData, m interface{}) error {
-	// TODO: implement; api doesn't exist yet
 	return resourceNetworkRead(d, m)
 }
 
 func resourceNetworkDelete(d *schema.ResourceData, m interface{}) error {
-	// TODO: implement; api doesn't exist yet
-	d.SetId("")
-	return nil
+	paperspaceClient := newPaperspaceClient(m)
+	return resource.Retry(d.Timeout(schema.TimeoutDefault), func() *resource.RetryError {
+		if err := paperspaceClient.DeleteNetwork(d.Id(), paperspace.NetworkDeleteParams{}); err != nil {
+			if ErrNotFound(err) {
+				return resource.NonRetryableError(nil)
+			}
+			return resource.RetryableError(err)
+		}
+
+		return resource.NonRetryableError(nil)
+	})
 }
 
 func resourceNetwork() *schema.Resource {
@@ -143,13 +150,6 @@ func resourceNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vlan_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			// name is not on the network schema but rather part of what we're calling here
-			// the "named network response", which comes from /getNetworks and includes the
-			// network and its name as joined with the network_owners table.
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
