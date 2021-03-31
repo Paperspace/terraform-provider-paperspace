@@ -13,16 +13,6 @@ jobs:
       - checkout
       - run:
           command: go test ./...
-  upload_assets:
-    docker:
-      - image: golang:1.14
-    steps:
-      - checkout
-      - run: apt update && apt install file jq -y
-      - run:
-          command: bin/build
-      - run:
-          command: bin/upload ${CIRCLE_TAG}
       
 workflows:
   version: 2
@@ -40,13 +30,3 @@ workflows:
           filters:
             branches:
               only: master
-
-  tag:
-    jobs:
-      - upload_assets:
-          context: semantic-release
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
