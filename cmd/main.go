@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Paperspace/terraform-paperspace-provider/pkg/provider"
+	"github.com/Paperspace/terraform-provider-paperspace/pkg/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/plugin"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )

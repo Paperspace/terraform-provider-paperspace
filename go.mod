@@ -1,4 +1,4 @@
-module github.com/Paperspace/terraform-paperspace-provider
+module github.com/Paperspace/terraform-provider-paperspace
 
 require (
 	github.com/Paperspace/paperspace-go v0.3.2
