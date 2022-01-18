@@ -25,6 +25,8 @@ plugins:
     - assets:
       - label: terraform-provider-paperspace-darwin-amd64
         path: build/terraform-provider-paperspace-darwin-amd64
+      - label: terraform-provider-paperspace-darwin-arm64
+        path: build/terraform-provider-paperspace-darwin-arm64
       - label: terraform-provider-paperspace-linux-amd64
         path: build/terraform-provider-paperspace-linux-amd64
       - label: terraform-provider-paperspace-windows-amd64.exe
