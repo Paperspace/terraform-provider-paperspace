@@ -7,6 +7,7 @@ function usage {
     exit 1
 }
 
+GOOS=darwin GOARCH=arm64 go build -o ${DIR}/../build/terraform-provider-paperspace-darwin-amd64 ${DIR}/../src/terraform-provider-paperspace
 GOOS=darwin GOARCH=amd64 go build -o ${DIR}/../build/terraform-provider-paperspace-darwin-amd64 ${DIR}/../src/terraform-provider-paperspace
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ${DIR}/../build/terraform-provider-paperspace-linux-amd64 ${DIR}/../src/terraform-provider-paperspace
 GOOS=windows GOARCH=amd64 go build -o ${DIR}/../build/terraform-provider-paperspace-windows-amd64.exe ${DIR}/../src/terraform-provider-paperspace
