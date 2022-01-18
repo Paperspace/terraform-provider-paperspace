@@ -8,7 +8,7 @@ _workspace_root: &workspace_root .
 jobs:
   test:
     docker:
-      - image: golang:1.14
+      - image: golang:1.17
     steps:
       - checkout
       - run:
