@@ -14,7 +14,7 @@ It is offered currently as a Terraform 'private cloud' provider while under earl
 ## Installation and Testing
 1) Install [terraform](https://www.terraform.io/downloads.html) and make sure it is in your path.
 
-1) Acquire a Paperspace API key for your account. See [Paperspace API](https://paperspace.github.io/paperspace-node/) for instructions on creating an api key.
+1) Acquire a Paperspace API key for your account. See [Paperspace API](https://docs.paperspace.com/core/api-reference/) for instructions on creating an api key.
 
 1) Copy the sample Terraform config file at [src/terraform-provider-paperspace/main.tf](src/terraform-provider-paperspace/main.tf) into your project directory.\
 \
