@@ -36,6 +36,9 @@ func resourceMachineCreate(d *schema.ResourceData, m interface{}) error {
 	body.AppendAsIfSet(d, "network_id", "networkId")
 	body.AppendAsIfSet(d, "shutdown_timeout_in_hours", "shutdownTimeoutInHours")
 	body.AppendAsIfSet(d, "is_managed", "isManaged")
+	body.AppendAsIfSet(d, "perform_auto_snapshot", "performAutoSnapshot")
+	body.AppendAsIfSet(d, "auto_snapshot_frequency", "autoSnapshotFrequency")
+	body.AppendAsIfSet(d, "auto_snapshot_save_count", "autoSnapshotSaveCount")
 
 	s := d.Get("live_forever")
 	if s.(bool) == true {
@@ -164,151 +167,154 @@ func resourceMachine() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"region": &schema.Schema{
+			"region": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"machine_type": &schema.Schema{
+			"machine_type": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"billing_type": &schema.Schema{
+			"billing_type": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"template_id": &schema.Schema{
+			"template_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"assign_public_ip": &schema.Schema{
+			"assign_public_ip": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"network_id": &schema.Schema{
+			"network_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"team_id": &schema.Schema{
+			"team_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"user_id": &schema.Schema{
+			"user_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"email": &schema.Schema{
+			"email": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"firstname": &schema.Schema{
+			"firstname": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"lastname": &schema.Schema{
+			"lastname": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"notification_email": &schema.Schema{
+			"notification_email": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"script_id": &schema.Schema{
+			"script_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"dt_last_run": &schema.Schema{
+			"dt_last_run": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"os": &schema.Schema{
+			"os": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ram": &schema.Schema{
+			"ram": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cpus": &schema.Schema{
+			"cpus": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"gpu": &schema.Schema{
+			"gpu": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_total": &schema.Schema{
+			"storage_total": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_used": &schema.Schema{
+			"storage_used": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"usage_rate": &schema.Schema{
+			"usage_rate": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"shutdown_timeout_in_hours": &schema.Schema{
+			"shutdown_timeout_in_hours": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"shutdown_timeout_forces": &schema.Schema{
+			"shutdown_timeout_forces": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"perform_auto_snapshot": &schema.Schema{
+			"perform_auto_snapshot": {
 				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
 			},
-			"auto_snapshot_frequency": &schema.Schema{
+			"auto_snapshot_frequency": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"auto_snapshot_save_count": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"agent_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_snapshot_save_count": &schema.Schema{
+			"dt_created": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"agent_type": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"dt_created": &schema.Schema{
+			"private_ip_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"public_ip_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"private_ip_address": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_ip_address": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"live_forever": &schema.Schema{
+			"live_forever": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"is_managed": &schema.Schema{
+			"is_managed": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
